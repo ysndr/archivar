@@ -9,7 +9,7 @@ use slog::Drain;
 use std::path::{PathBuf, Path};
 use std::env;
 
-const ARCHIVAR_FILE_NAME : &'static str = ".archivar";
+const ARCHIVAR_FILE_NAME: &'static str = ".archivar";
 
 
 
@@ -36,88 +36,122 @@ fn match_args() -> ArgMatches<'static> {
         .version("0.1.0")
         .author("Yannik Sander <me@ysndr.de>")
         .about("Tool to archive projects")
-        .arg(Arg::with_name("VERBOSITY")
-            .required(false)
-            .takes_value(false)
-            .short("v")
-            .multiple(true))
-        .subcommand(SubCommand::with_name("init")
-            .about("command to execute")
-            .arg(Arg::with_name("PATH")
-                 .required(false)
-                 .takes_value(true)
-                 .index(1))
-            .arg(Arg::with_name("GIT_DISABLED")
-                .help("disable git")
-                .long("no-git")
+        .arg(
+            Arg::with_name("VERBOSITY")
                 .required(false)
-                .takes_value(false)))
-        .subcommand(SubCommand::with_name("new")
-            .about("create new project")
-            .arg(Arg::with_name("PATH")
-                 .required(true)
-                 .takes_value(true)
-                 .index(1))
-            .arg(Arg::with_name("ARCHIVAR_ROOT")
-                .help("override root dir")
-                .short("d")
-                .long("dir")
-                .required(false)
-                .takes_value(true))
-            .arg(Arg::with_name("TEMPLATE")
-                .help("template to use")
-                .short("t")
-                .long("template")
-                .required(false)
-                .takes_value(true))
-            .arg(Arg::with_name("TEMPLATE_ARGS")
-                .required(false)
-                .multiple(true))
-            .arg(Arg::with_name("NO_COMMIT")
-                 .help("inhibit git commit")
-                 .long("no-commit")
-                 .required(false)
-                 .takes_value(false)))
-        .subcommand(SubCommand::with_name("archive")
-             .about("archive project")
-             .arg(Arg::with_name("PATH")
-                  .required(true)
-                  .takes_value(true)
-                  .index(1))
-             .arg(Arg::with_name("ARCHIVAR_ROOT")
-                 .help("override root dir")
-                 .short("d")
-                 .long("dir")
-                 .required(false)
-                 .takes_value(true))
-             .arg(Arg::with_name("NO_COMMIT")
-                  .help("inhibit git commit")
-                  .long("no-commit")
-                  .required(false)
-                  .takes_value(false)))
-        .subcommand(SubCommand::with_name("unarchive")
-             .about("unarchive project")
-             .arg(Arg::with_name("PATH")
-                  .required(true)
-                  .takes_value(true)
-                  .index(1))
-             .arg(Arg::with_name("ARCHIVAR_ROOT")
-                 .help("override root dir")
-                 .short("d")
-                 .long("dir")
-                 .required(false)
-                 .takes_value(true))
-             .arg(Arg::with_name("NO_COMMIT")
-                  .help("inhibit git commit")
-                  .long("no-commit")
-                  .required(false)
-                  .takes_value(false)))
+                .takes_value(false)
+                .short("v")
+                .multiple(true),
+        )
+        .subcommand(
+            SubCommand::with_name("init")
+                .about("command to execute")
+                .arg(
+                    Arg::with_name("PATH")
+                        .required(false)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("GIT_DISABLED")
+                        .help("disable git")
+                        .long("no-git")
+                        .required(false)
+                        .takes_value(false),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("new")
+                .about("create new project")
+                .arg(
+                    Arg::with_name("PATH")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("ARCHIVAR_ROOT")
+                        .help("override root dir")
+                        .short("d")
+                        .long("dir")
+                        .required(false)
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("TEMPLATE")
+                        .help("template to use")
+                        .short("t")
+                        .long("template")
+                        .required(false)
+                        .takes_value(true),
+                )
+                .arg(Arg::with_name("TEMPLATE_ARGS").required(false).multiple(
+                    true,
+                ))
+                .arg(
+                    Arg::with_name("NO_COMMIT")
+                        .help("inhibit git commit")
+                        .long("no-commit")
+                        .required(false)
+                        .takes_value(false),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("archive")
+                .about("archive project")
+                .arg(
+                    Arg::with_name("PATH")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("ARCHIVAR_ROOT")
+                        .help("override root dir")
+                        .short("d")
+                        .long("dir")
+                        .required(false)
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("NO_COMMIT")
+                        .help("inhibit git commit")
+                        .long("no-commit")
+                        .required(false)
+                        .takes_value(false),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("unarchive")
+                .about("unarchive project")
+                .arg(
+                    Arg::with_name("PATH")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("ARCHIVAR_ROOT")
+                        .help("override root dir")
+                        .short("d")
+                        .long("dir")
+                        .required(false)
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("NO_COMMIT")
+                        .help("inhibit git commit")
+                        .long("no-commit")
+                        .required(false)
+                        .takes_value(false),
+                ),
+        )
         .get_matches();
-        matches
+    matches
 }
 
 fn create_logger(matches: &ArgMatches) -> Option<slog::Logger> {
-    println!("{}",matches.occurrences_of("VERBOSITY"));
+    println!("{}", matches.occurrences_of("VERBOSITY"));
 
     let min_log_level = match matches.occurrences_of("VERBOSITY") {
         0 => slog::Level::Warning,
@@ -144,10 +178,7 @@ fn create_logger(matches: &ArgMatches) -> Option<slog::Logger> {
 #[derive(Debug)]
 enum Command<'a> {
     // archivar init ..
-    Init {
-        path: PathBuf,
-        with_git: bool,
-    },
+    Init { path: PathBuf, with_git: bool },
     // archivar new path ..
     New {
         path: PathBuf,
@@ -169,36 +200,49 @@ enum Command<'a> {
         dir: PathBuf,
         no_commit: bool,
     },
-    Empty
+    Empty,
 }
 
 impl<'a> Command<'a> {
     fn from_matches(matches: &'a ArgMatches, logger: &slog::Logger) -> Command<'a> {
         let command = match matches.subcommand() {
-            ("init", Some(sub_m)) =>  { Self::init(sub_m) },
-            ("new", Some(sub_m)) =>  { Self::new(sub_m) },
-            ("archive", Some(sub_m)) =>  { Self::archive(sub_m) },
-            ("unarchive", Some(sub_m)) =>  { Self::unarchive(sub_m) },
-            _                     =>  { Command::Empty }
+            ("init", Some(sub_m)) => Self::init(sub_m),
+            ("new", Some(sub_m)) => Self::new(sub_m),
+            ("archive", Some(sub_m)) => Self::archive(sub_m),
+            ("unarchive", Some(sub_m)) => Self::unarchive(sub_m),
+            _ => Command::Empty,
         };
 
-        info!(logger,"command given: {:?}", command);
+        info!(logger, "command given: {:?}", command);
         command
     }
 
     fn init(matches: &ArgMatches) -> Command<'a> {
-        let path = matches.value_of("PATH").map_or(env::current_dir().unwrap(), PathBuf::from);
+        let path = matches.value_of("PATH").map_or(
+            env::current_dir().unwrap(),
+            PathBuf::from,
+        );
         let no_git = matches.is_present("GIT_DISABLED");
 
-        Command::Init { path: path, with_git: !no_git }
+        Command::Init {
+            path: path,
+            with_git: !no_git,
+        }
     }
 
     fn new(matches: &'a ArgMatches) -> Command<'a> {
-        let root = matches.value_of("ARCHIVAR_ROOT")
-            .map_or(env::current_dir().unwrap(), PathBuf::from);
+        let root = matches.value_of("ARCHIVAR_ROOT").map_or(
+            env::current_dir().unwrap(),
+            PathBuf::from,
+        );
         let path = root.join(Path::new(matches.value_of("PATH").unwrap()));
-        let template = matches.value_of("TEMPLATE").map_or(None, |t| Some(root.join(Path::new(t))));
-        let template_args = matches.values_of("TEMPLATE_ARGS").unwrap_or_default().collect();
+        let template = matches.value_of("TEMPLATE").map_or(None, |t| {
+            Some(root.join(Path::new(t)))
+        });
+        let template_args = matches
+            .values_of("TEMPLATE_ARGS")
+            .unwrap_or_default()
+            .collect();
         let no_commit = matches.is_present("NO_COMMIT");
 
         Command::New {
@@ -207,13 +251,15 @@ impl<'a> Command<'a> {
 
             template: template,
             template_args: template_args,
-            no_commit: no_commit
+            no_commit: no_commit,
         }
     }
 
     fn archive(matches: &ArgMatches) -> Command<'a> {
-        let root = matches.value_of("ARCHIVAR_ROOT")
-            .map_or(env::current_dir().unwrap(), PathBuf::from);
+        let root = matches.value_of("ARCHIVAR_ROOT").map_or(
+            env::current_dir().unwrap(),
+            PathBuf::from,
+        );
         let path = root.join(Path::new(matches.value_of("PATH").unwrap()));
         let no_commit = matches.is_present("NO_COMMIT");
 
@@ -221,13 +267,15 @@ impl<'a> Command<'a> {
             dir: root,
             path: path,
 
-            no_commit: no_commit
+            no_commit: no_commit,
         }
     }
 
     fn unarchive(matches: &ArgMatches) -> Command<'a> {
-        let root = matches.value_of("ARCHIVAR_ROOT")
-            .map_or(env::current_dir().unwrap(), PathBuf::from);
+        let root = matches.value_of("ARCHIVAR_ROOT").map_or(
+            env::current_dir().unwrap(),
+            PathBuf::from,
+        );
         let path = root.join(Path::new(matches.value_of("PATH").unwrap()));
         let no_commit = matches.is_present("NO_COMMIT");
 
@@ -235,76 +283,82 @@ impl<'a> Command<'a> {
             dir: root,
             path: path,
 
-            no_commit: no_commit
+            no_commit: no_commit,
         }
     }
 
     fn validate(&self, logger: &slog::Logger) -> Result<&Command, String> {
         match self {
-            Command::Init {path, with_git} => {
+            Command::Init { path, with_git } => {
                 let path = path.as_path();
-                if !path.exists(){
+                if !path.exists() {
                     return Err(format!("ARCHIVAR_ROOT ({}) does not exist", path.display()));
                 }
                 if !path.is_dir() {
-                    return Err(format!("Archivar_ROOT ({}) must be a directory", path.display()));
+                    return Err(format!(
+                        "Archivar_ROOT ({}) must be a directory",
+                        path.display()
+                    ));
                 }
                 if path.join(ARCHIVAR_FILE_NAME).exists() {
-                    return Err(format!("Archivar_ROOT ({}) must be a directory", path.display()));
+                    return Err(format!(
+                        "Archivar_ROOT ({}) must be a directory",
+                        path.display()
+                    ));
                 }
                 Ok(self)
-            },
-            Command::New {path, dir, template, template_args, no_commit} => {
-                if !dir.exists(){
+            }
+            Command::New {
+                path,
+                dir,
+                template,
+                template_args,
+                no_commit,
+            } => {
+                if !dir.exists() {
                     return Err(format!("ARCHIVAR_ROOT ({}) does not exist", path.display()));
                 }
                 Ok(self)
-            },
-            Command::Archive {path, dir, no_commit} | Command::Unarchive {path, dir, no_commit} => {
-                Ok(self)
-            },
-            _ => {Ok(self)}
+            }
+            Command::Archive {
+                path,
+                dir,
+                no_commit,
+            } |
+            Command::Unarchive {
+                path,
+                dir,
+                no_commit,
+            } => Ok(self),
+            _ => Ok(self),
         }
 
     }
 
     fn to_actions(&self, logger: &slog::Logger) {
         match self {
-            _ => ()
+            _ => (),
         }
 
     }
-
-
 }
 
 
 #[derive(Debug)]
 enum Action {
-    Move {
-        from: PathBuf,
-        to: PathBuf
-    },
-    Copy {
-        from: PathBuf,
-        to: PathBuf
-    },
+    Move { from: PathBuf, to: PathBuf },
+    Copy { from: PathBuf, to: PathBuf },
     Git(GitAction),
-    Noop
+    Noop,
 }
 
 
 impl Action {
     fn commit(&self) {
         match self {
-            Action::Move {from, to} => {
-
-
-
-
-            },
-            Action::Copy {from, to} => {},
-            Action::Git(git_action) => {},
+            Action::Move { from, to } => {}
+            Action::Copy { from, to } => {}
+            Action::Git(git_action) => {}
             Noop => {}
         }
     }
