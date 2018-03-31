@@ -7,3 +7,4 @@ authors = ["Yannik Sander <me@ysndr.de>"]
 clap = "2.26.0"
 slog = "2.2.3"
 slog-term = "2.3.0"
+slog-async = "2.2.0"
