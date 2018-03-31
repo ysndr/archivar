@@ -4,3 +4,6 @@ version = "0.1.0"
 authors = ["Yannik Sander <me@ysndr.de>"]
 
 [dependencies]
+clap = "2.26.0"
+slog = "2.2.3"
+slog-term = "2.3.0"
