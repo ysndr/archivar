@@ -9,6 +9,10 @@ use slog::Drain;
 use std::path::{PathBuf, Path};
 use std::env;
 
+const ARCHIVAR_FILE_NAME : &'static str = ".archivar";
+
+
+
 // use slog::DrainExt;
 
 use clap::{Arg, App, SubCommand, ArgMatches};
@@ -18,7 +22,9 @@ fn main() {
 
     let matches = match_args();
     let logger = create_logger(&matches).unwrap();
-    let command = matches_to_command(&matches, &logger);
+    let command = Command::from_matches(&matches, &logger);
+    let validated = command.validate(&logger);
+
 
     info!(&logger, "info");
     debug!(&logger, "debug");
@@ -131,18 +137,7 @@ fn create_logger(matches: &ArgMatches) -> Option<slog::Logger> {
     Some(logger)
 }
 
-fn matches_to_command<'a>(matches: &'a ArgMatches, logger: &slog::Logger) -> Command<'a> {
-    let command = match matches.subcommand() {
-        ("init", Some(sub_m)) =>  { Command::init(sub_m) },
-        ("new", Some(sub_m)) =>  { Command::new(sub_m) },
-        ("archive", Some(sub_m)) =>  { Command::archive(sub_m) },
-        ("unarchive", Some(sub_m)) =>  { Command::unarchive(sub_m) },
-        _                     =>  { Command::Empty }
-    };
 
-    info!(logger,"command given: {:?}", command);
-    command
-}
 
 
 
@@ -178,6 +173,19 @@ enum Command<'a> {
 }
 
 impl<'a> Command<'a> {
+    fn from_matches(matches: &'a ArgMatches, logger: &slog::Logger) -> Command<'a> {
+        let command = match matches.subcommand() {
+            ("init", Some(sub_m)) =>  { Self::init(sub_m) },
+            ("new", Some(sub_m)) =>  { Self::new(sub_m) },
+            ("archive", Some(sub_m)) =>  { Self::archive(sub_m) },
+            ("unarchive", Some(sub_m)) =>  { Self::unarchive(sub_m) },
+            _                     =>  { Command::Empty }
+        };
+
+        info!(logger,"command given: {:?}", command);
+        command
+    }
+
     fn init(matches: &ArgMatches) -> Command<'a> {
         let path = matches.value_of("PATH").map_or(env::current_dir().unwrap(), PathBuf::from);
         let no_git = matches.is_present("GIT_DISABLED");
@@ -230,6 +238,44 @@ impl<'a> Command<'a> {
             no_commit: no_commit
         }
     }
+
+    fn validate(&self, logger: &slog::Logger) -> Result<&Command, String> {
+        match self {
+            Command::Init {path, with_git} => {
+                let path = path.as_path();
+                if !path.exists(){
+                    return Err(format!("ARCHIVAR_ROOT ({}) does not exist", path.display()));
+                }
+                if !path.is_dir() {
+                    return Err(format!("Archivar_ROOT ({}) must be a directory", path.display()));
+                }
+                if path.join(ARCHIVAR_FILE_NAME).exists() {
+                    return Err(format!("Archivar_ROOT ({}) must be a directory", path.display()));
+                }
+                Ok(self)
+            },
+            Command::New {path, dir, template, template_args, no_commit} => {
+                if !dir.exists(){
+                    return Err(format!("ARCHIVAR_ROOT ({}) does not exist", path.display()));
+                }
+                Ok(self)
+            },
+            Command::Archive {path, dir, no_commit} | Command::Unarchive {path, dir, no_commit} => {
+                Ok(self)
+            },
+            _ => {Ok(self)}
+        }
+
+    }
+
+    fn to_actions(&self, logger: &slog::Logger) {
+        match self {
+            _ => ()
+        }
+
+    }
+
+
 }
 
 
@@ -252,7 +298,7 @@ impl Action {
     fn commit(&self) {
         match self {
             Action::Move {from, to} => {
-                
+
 
 
 
@@ -263,10 +309,6 @@ impl Action {
         }
     }
 }
-
-
-
-
 
 #[derive(Debug)]
 struct GitAction;
