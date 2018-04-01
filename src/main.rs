@@ -10,6 +10,7 @@ use std::path::{PathBuf, Path};
 use std::env;
 
 const ARCHIVAR_FILE_NAME: &'static str = ".archivar";
+const TEMPLATE_FILE_NAME: &'static str = "template.yaml";
 
 
 
@@ -23,8 +24,6 @@ fn main() {
     let matches = match_args();
     let logger = create_logger(&matches).unwrap();
     let command = Command::from_matches(&matches, &logger);
-    let validated = command.validate(&logger);
-
 
     info!(&logger, "info");
     debug!(&logger, "debug");
@@ -220,7 +219,14 @@ impl<'a> Command<'a> {
     fn init(matches: &ArgMatches) -> Command<'a> {
         let path = matches.value_of("PATH").map_or(
             env::current_dir().unwrap(),
-            PathBuf::from,
+            |p| {
+                let pp = PathBuf::from(p);
+                if pp.is_relative() {
+                    env::current_dir().unwrap().join(pp)
+                } else {
+                    pp
+                }
+            },
         );
         let no_git = matches.is_present("GIT_DISABLED");
 
@@ -235,7 +241,7 @@ impl<'a> Command<'a> {
             env::current_dir().unwrap(),
             PathBuf::from,
         );
-        let path = root.join(Path::new(matches.value_of("PATH").unwrap()));
+        let path = PathBuf::from(matches.value_of("PATH").unwrap());
         let template = matches.value_of("TEMPLATE").map_or(None, |t| {
             Some(root.join(Path::new(t)))
         });
@@ -260,7 +266,7 @@ impl<'a> Command<'a> {
             env::current_dir().unwrap(),
             PathBuf::from,
         );
-        let path = root.join(Path::new(matches.value_of("PATH").unwrap()));
+        let path = PathBuf::from(matches.value_of("PATH").unwrap());
         let no_commit = matches.is_present("NO_COMMIT");
 
         Command::Archive {
@@ -276,7 +282,7 @@ impl<'a> Command<'a> {
             env::current_dir().unwrap(),
             PathBuf::from,
         );
-        let path = root.join(Path::new(matches.value_of("PATH").unwrap()));
+        let path = PathBuf::from(matches.value_of("PATH").unwrap());
         let no_commit = matches.is_present("NO_COMMIT");
 
         Command::Unarchive {
@@ -286,68 +292,62 @@ impl<'a> Command<'a> {
             no_commit: no_commit,
         }
     }
+    // }
 
-    fn validate(&self, logger: &slog::Logger) -> Result<&Command, String> {
+    fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Action>> {
+        let mut actions = Vec::new();
         match self {
             Command::Init { path, with_git } => {
-                let path = path.as_path();
-                if !path.exists() {
-                    return Err(format!("ARCHIVAR_ROOT ({}) does not exist", path.display()));
-                }
                 if !path.is_dir() {
-                    return Err(format!(
-                        "Archivar_ROOT ({}) must be a directory",
-                        path.display()
+                    return Err(Error::NoSuchFileOrDirectory(
+                        "init".to_string(),
+                        path.to_owned(),
                     ));
                 }
-                if path.join(ARCHIVAR_FILE_NAME).exists() {
-                    return Err(format!(
-                        "Archivar_ROOT ({}) must be a directory",
-                        path.display()
+                if !path.exists() {
+                    actions.push(Action::Create {
+                        path: path.to_owned(),
+                        iotype: IOType::Directory,
+                    })
+                } else if !path.read_dir().unwrap().count() > 0 {
+                    return Err(Error::DirectoryNotEmpty(
+                        "init".to_string(),
+                        path.to_owned(),
                     ));
+                } else {
+                    let mut archivar_file_path = path.to_owned();
+                    archivar_file_path.push(ARCHIVAR_FILE_NAME);
+                    actions.push(Action::Create {
+                        path: archivar_file_path,
+                        iotype: IOType::File,
+                    })
                 }
-                Ok(self)
-            }
-            Command::New {
-                path,
-                dir,
-                template,
-                template_args,
-                no_commit,
-            } => {
-                if !dir.exists() {
-                    return Err(format!("ARCHIVAR_ROOT ({}) does not exist", path.display()));
+                if *with_git {
+                    actions.push(Action::Noop);
                 }
-                Ok(self)
+
+                actions.push(Action::Message("done!".to_string()));
+
+                Ok(Vec::new())
             }
-            Command::Archive {
-                path,
-                dir,
-                no_commit,
-            } |
-            Command::Unarchive {
-                path,
-                dir,
-                no_commit,
-            } => Ok(self),
-            _ => Ok(self),
-        }
-
-    }
-
-    fn to_actions(&self, logger: &slog::Logger) {
-        match self {
-            _ => (),
+            _ => Ok(Vec::new()),
         }
 
     }
 }
 
+#[derive(Debug)]
+enum IOType {
+    File,
+    Directory,
+}
 
 #[derive(Debug)]
 enum Action {
+    Create { path: PathBuf, iotype: IOType },
     Move { from: PathBuf, to: PathBuf },
     Copy { from: PathBuf, to: PathBuf },
+    Message(String),
     Git(GitAction),
     Noop,
 }
@@ -356,9 +356,11 @@ enum Action {
 impl Action {
     fn commit(&self) {
         match self {
+            Action::Create { path, iotype } => {}
             Action::Move { from, to } => {}
             Action::Copy { from, to } => {}
             Action::Git(git_action) => {}
+            Action::Message(String) => {}
             Noop => {}
         }
     }
@@ -366,3 +368,15 @@ impl Action {
 
 #[derive(Debug)]
 struct GitAction;
+
+
+
+enum Error {
+    NoSuchFileOrDirectory(String, PathBuf),
+    FileExists(String, PathBuf),
+    DirectoryExists(String, PathBuf),
+    DirectoryNotEmpty(String, PathBuf),
+}
+
+// type aliea for result
+type Result<T> = std::result::Result<T, Error>;
