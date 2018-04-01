@@ -293,120 +293,6 @@ impl<'a> Command<'a> {
             no_commit: no_commit,
         }
     }
-    //
-    // fn validate(&self, logger: &slog::Logger) -> Result<&Command> {
-    //     fn check_root(root: &Path) -> Option<String> {
-    //         if !root.exists() {
-    //             return Some(format!("ARCHIVAR_ROOT ({}) does not exist", root.display()));
-    //         }
-    //         if !root.is_dir() {
-    //             return Some(format!(
-    //                 "ARCHIVAR_ROOT ({}) must be a directory",
-    //                 root.display()
-    //             ));
-    //         }
-    //         None
-    //     }
-    //
-    //
-    //     match self {
-    //         Command::Init { path, with_git } => {
-    //             let path = path.as_path();
-    //             match check_root(&path) {
-    //                 Some(String) => return Err(String),
-    //                 None => {}
-    //             };
-    //             if path.join(ARCHIVAR_FILE_NAME).exists() {
-    //                 return Err(format!(
-    //                     "Archivar_ROOT ({}) already contains an {} file",
-    //                     path.display(),
-    //                     &ARCHIVAR_FILE_NAME
-    //                 ));
-    //             }
-    //             Ok(self)
-    //         }
-    //         Command::New {
-    //             path,
-    //             dir,
-    //             template,
-    //             template_args,
-    //             no_commit,
-    //         } => {
-    //             match check_root(&path) {
-    //                 Some(string) => return Err(string),
-    //                 None => {}
-    //             };
-    //
-    //             // check if path is valid
-    //             if path.is_absolute() {
-    //                 return Err(format!(
-    //                     "goven path ({}) is absolute. use relative paths and/or
-    //                     change ARCHIVAR_ROOT by using `--dir|-d`",
-    //                     path.display()
-    //                 ));
-    //             }
-    //             if path.starts_with("archive") {
-    //                 return Err("path may point to location inside archive".to_owned());
-    //             }
-    //
-    //             // check for project path validity
-    //             let project_abs = dir.join(path);
-    //             if !dir.join(ARCHIVAR_FILE_NAME).exists() {
-    //                 return Err(format!(
-    //                     "No archivar found, ARCHIVAR_ROOT ({}) does not contain an {} file",
-    //                     dir.display(),
-    //                     &ARCHIVAR_FILE_NAME
-    //                 ));
-    //             }
-    //             if project_abs.exists() {
-    //                 return Err(format!(
-    //                     "{} is either already a project or is contained in another",
-    //                     &project_abs.display()
-    //                 ));
-    //             }
-    //
-    //             // check for template validity
-    //             if let Some(template) = template {
-    //
-    //                 let absolute = template;
-    //                 let joined = dir.join(template);
-    //
-    //                 let abs_template = if template.is_absolute() {
-    //                     absolute.as_path()
-    //                 } else {
-    //                     joined.as_path()
-    //                 };
-    //
-    //                 if template.is_relative() && !&template.starts_with(".template") {
-    //                     return Err("template not from .template foder".to_owned());
-    //                 }
-    //                 if !abs_template.join(TEMPLATE_FILE_NAME).is_file() {
-    //                     return Err(
-    //                         format!(
-    //                             "'{}' does not point to a template folder",
-    //                             abs_template.display()
-    //                         ).to_owned(),
-    //                     );
-    //                 }
-    //
-    //             }
-    //
-    //             Ok(self)
-    //         }
-    //         Command::Archive {
-    //             path,
-    //             dir,
-    //             no_commit,
-    //         } |
-    //         Command::Unarchive {
-    //             path,
-    //             dir,
-    //             no_commit,
-    //         } => Ok(self),
-    //         _ => Ok(self),
-    //     }
-    //
-    // }
 
     fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Action>> {
         let mut actions = Vec::new();
@@ -446,21 +332,20 @@ impl<'a> Command<'a> {
                 if !path.is_relative() {
                     return Err(Error::PathNotRelative("new".to_string(), path.to_owned()));
                 }
-                if !dir.exists() {
-                    return Err(Error::NoSuchFileOrDirectory(
-                        "new".to_string(),
-                        dir.to_owned(),
-                    ));
+
+                if !dir.join(ARCHIVAR_FILE_NAME).exists() {
+                    return Err(Error::NoArchivarFound("new".to_string(), dir.to_owned()));
                 }
 
                 let abs_path = dir.join(path);
 
-                if abs_path.exists() {
-                    return Err(Error::DirectoryExists(
-                        "new".to_string(),
-                        abs_path.to_owned(),
-                    ));
-                }
+                // Question: add to archivar afterwards
+                // if abs_path.exists() {
+                //     return Err(Error::DirectoryExists(
+                //         "new".to_string(),
+                //         abs_path.to_owned(),
+                //     ));
+                // }
 
                 let mut parents = vec![abs_path.parent().unwrap()];
                 while parents.last().unwrap() != dir {
@@ -475,11 +360,29 @@ impl<'a> Command<'a> {
 
                 for parent in parents.iter() {
                     if parent.join(Path::new(PROJECT_FILE_NAME)).exists() {
-                        return Err(Error::IsInExistingProject(
+                        return Err(Error::ProjectExists(
                             "new".to_string(),
                             path.to_owned(),
+                            false,
                         ));
                     }
+                }
+
+                if path.starts_with("archive") {
+                    return Err(Error::ArchiveReferenced(
+                        "new".to_string(),
+                        abs_path.to_owned(),
+                    ));
+                }
+
+                let archived_abs_path = dir.join("archive").join(path);
+
+                if archived_abs_path.exists() {
+                    return Err(Error::ProjectExists(
+                        "new".to_string(),
+                        abs_path.to_owned(),
+                        true,
+                    ));
                 }
 
                 // TODO: implement templating
@@ -492,6 +395,110 @@ impl<'a> Command<'a> {
 
                 Ok(actions)
             }
+            Command::Archive {
+                dir,
+                path,
+                no_commit,
+            } => {
+                if !path.is_relative() {
+                    return Err(Error::PathNotRelative(
+                        "archive".to_string(),
+                        path.to_owned(),
+                    ));
+                }
+
+                if !dir.join(ARCHIVAR_FILE_NAME).exists() {
+                    return Err(Error::NoArchivarFound("new".to_string(), dir.to_owned()));
+                }
+
+                let abs_path = dir.join(path);
+
+                if !abs_path.exists() {
+                    return Err(Error::NoSuchFileOrDirectory(
+                        "archive".to_string(),
+                        abs_path.to_owned(),
+                    ));
+                }
+
+                let project_file_path = abs_path.join(PROJECT_FILE_NAME);
+                if !project_file_path.exists() {
+                    return Err(Error::NoProjectFound(
+                        "archive".to_string(),
+                        abs_path.to_owned(),
+                    ));
+                }
+
+                if path.starts_with("archive") {
+                    return Err(Error::ArchiveReferenced(
+                        "new".to_string(),
+                        abs_path.to_owned(),
+                    ));
+                }
+
+                let archived_abs_path = dir.join("archive").join(path);
+
+                actions.push(Action::Move {
+                    from: abs_path,
+                    to: archived_abs_path,
+                });
+
+                Ok(actions)
+            }
+
+            Command::Archive {
+                dir,
+                path,
+                no_commit,
+            } => {
+                if !path.is_relative() {
+                    return Err(Error::PathNotRelative(
+                        "unarchive".to_string(),
+                        path.to_owned(),
+                    ));
+                }
+
+                if !dir.join(ARCHIVAR_FILE_NAME).exists() {
+                    return Err(Error::NoArchivarFound("new".to_string(), dir.to_owned()));
+                }
+
+
+
+                let abs_path;
+                let archived_abs_path;
+
+                if path.starts_with("archive") {
+                    abs_path = dir.join(path.strip_prefix("archive").unwrap());
+                    archived_abs_path = dir.join(path);
+                } else {
+                    abs_path = dir.join(path);
+                    archived_abs_path = dir.join("archive").join(path);
+                }
+
+
+                if !archived_abs_path.exists() {
+                    return Err(Error::NoSuchFileOrDirectory(
+                        "unarchive".to_string(),
+                        abs_path.to_owned(),
+                    ));
+                }
+
+                let project_file_path = archived_abs_path.join(PROJECT_FILE_NAME);
+                if !project_file_path.exists() {
+                    return Err(Error::NoProjectFound(
+                        "unarchive".to_string(),
+                        archived_abs_path.to_owned(),
+                    ));
+                }
+
+
+                actions.push(Action::Move {
+                    from: archived_abs_path,
+                    to: abs_path,
+                });
+
+                Ok(actions)
+            }
+
             _ => Ok(Vec::new()),
         }
 
@@ -536,7 +543,10 @@ enum Error {
     DirectoryNotEmpty(String, PathBuf),
     PathNoDirectory(String, PathBuf),
     PathNotRelative(String, PathBuf),
-    IsInExistingProject(String, PathBuf),
+    NoProjectFound(String, PathBuf),
+    NoArchivarFound(String, PathBuf),
+    ProjectExists(String, PathBuf, bool),
+    ArchiveReferenced(String, PathBuf),
 }
 
 // type aliea for result
