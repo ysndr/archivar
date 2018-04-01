@@ -11,6 +11,7 @@ use std::env;
 
 const ARCHIVAR_FILE_NAME: &'static str = ".archivar";
 const TEMPLATE_FILE_NAME: &'static str = "template.yaml";
+const PROJECT_FILE_NAME: &'static str = ".archivarproject";
 
 
 
@@ -24,9 +25,9 @@ fn main() {
     let matches = match_args();
     let logger = create_logger(&matches).unwrap();
     let command = Command::from_matches(&matches, &logger);
+    let actions = command.to_actions(&logger);
 
-    info!(&logger, "info");
-    debug!(&logger, "debug");
+    debug!(&logger, "actions: {:?}", &actions)
 
 }
 
@@ -292,24 +293,129 @@ impl<'a> Command<'a> {
             no_commit: no_commit,
         }
     }
+    //
+    // fn validate(&self, logger: &slog::Logger) -> Result<&Command> {
+    //     fn check_root(root: &Path) -> Option<String> {
+    //         if !root.exists() {
+    //             return Some(format!("ARCHIVAR_ROOT ({}) does not exist", root.display()));
+    //         }
+    //         if !root.is_dir() {
+    //             return Some(format!(
+    //                 "ARCHIVAR_ROOT ({}) must be a directory",
+    //                 root.display()
+    //             ));
+    //         }
+    //         None
+    //     }
+    //
+    //
+    //     match self {
+    //         Command::Init { path, with_git } => {
+    //             let path = path.as_path();
+    //             match check_root(&path) {
+    //                 Some(String) => return Err(String),
+    //                 None => {}
+    //             };
+    //             if path.join(ARCHIVAR_FILE_NAME).exists() {
+    //                 return Err(format!(
+    //                     "Archivar_ROOT ({}) already contains an {} file",
+    //                     path.display(),
+    //                     &ARCHIVAR_FILE_NAME
+    //                 ));
+    //             }
+    //             Ok(self)
+    //         }
+    //         Command::New {
+    //             path,
+    //             dir,
+    //             template,
+    //             template_args,
+    //             no_commit,
+    //         } => {
+    //             match check_root(&path) {
+    //                 Some(string) => return Err(string),
+    //                 None => {}
+    //             };
+    //
+    //             // check if path is valid
+    //             if path.is_absolute() {
+    //                 return Err(format!(
+    //                     "goven path ({}) is absolute. use relative paths and/or
+    //                     change ARCHIVAR_ROOT by using `--dir|-d`",
+    //                     path.display()
+    //                 ));
+    //             }
+    //             if path.starts_with("archive") {
+    //                 return Err("path may point to location inside archive".to_owned());
+    //             }
+    //
+    //             // check for project path validity
+    //             let project_abs = dir.join(path);
+    //             if !dir.join(ARCHIVAR_FILE_NAME).exists() {
+    //                 return Err(format!(
+    //                     "No archivar found, ARCHIVAR_ROOT ({}) does not contain an {} file",
+    //                     dir.display(),
+    //                     &ARCHIVAR_FILE_NAME
+    //                 ));
+    //             }
+    //             if project_abs.exists() {
+    //                 return Err(format!(
+    //                     "{} is either already a project or is contained in another",
+    //                     &project_abs.display()
+    //                 ));
+    //             }
+    //
+    //             // check for template validity
+    //             if let Some(template) = template {
+    //
+    //                 let absolute = template;
+    //                 let joined = dir.join(template);
+    //
+    //                 let abs_template = if template.is_absolute() {
+    //                     absolute.as_path()
+    //                 } else {
+    //                     joined.as_path()
+    //                 };
+    //
+    //                 if template.is_relative() && !&template.starts_with(".template") {
+    //                     return Err("template not from .template foder".to_owned());
+    //                 }
+    //                 if !abs_template.join(TEMPLATE_FILE_NAME).is_file() {
+    //                     return Err(
+    //                         format!(
+    //                             "'{}' does not point to a template folder",
+    //                             abs_template.display()
+    //                         ).to_owned(),
+    //                     );
+    //                 }
+    //
+    //             }
+    //
+    //             Ok(self)
+    //         }
+    //         Command::Archive {
+    //             path,
+    //             dir,
+    //             no_commit,
+    //         } |
+    //         Command::Unarchive {
+    //             path,
+    //             dir,
+    //             no_commit,
+    //         } => Ok(self),
+    //         _ => Ok(self),
+    //     }
+    //
     // }
 
     fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Action>> {
         let mut actions = Vec::new();
         match self {
             Command::Init { path, with_git } => {
-                if !path.is_dir() {
-                    return Err(Error::NoSuchFileOrDirectory(
-                        "init".to_string(),
-                        path.to_owned(),
-                    ));
+                if path.exists() && !path.is_dir() {
+                    return Err(Error::PathNoDirectory("init".to_string(), path.to_owned()));
                 }
-                if !path.exists() {
-                    actions.push(Action::Create {
-                        path: path.to_owned(),
-                        iotype: IOType::Directory,
-                    })
-                } else if !path.read_dir().unwrap().count() > 0 {
+                if path.exists() && !path.read_dir().unwrap().count() > 0 {
                     return Err(Error::DirectoryNotEmpty(
                         "init".to_string(),
                         path.to_owned(),
@@ -317,9 +423,9 @@ impl<'a> Command<'a> {
                 } else {
                     let mut archivar_file_path = path.to_owned();
                     archivar_file_path.push(ARCHIVAR_FILE_NAME);
-                    actions.push(Action::Create {
+                    actions.push(Action::Touch {
                         path: archivar_file_path,
-                        iotype: IOType::File,
+                        mkparents: true,
                     })
                 }
                 if *with_git {
@@ -328,7 +434,63 @@ impl<'a> Command<'a> {
 
                 actions.push(Action::Message("done!".to_string()));
 
-                Ok(Vec::new())
+                Ok(actions)
+            }
+            Command::New {
+                path,
+                dir,
+                template,
+                template_args,
+                no_commit,
+            } => {
+                if !path.is_relative() {
+                    return Err(Error::PathNotRelative("new".to_string(), path.to_owned()));
+                }
+                if !dir.exists() {
+                    return Err(Error::NoSuchFileOrDirectory(
+                        "new".to_string(),
+                        dir.to_owned(),
+                    ));
+                }
+
+                let abs_path = dir.join(path);
+
+                if abs_path.exists() {
+                    return Err(Error::DirectoryExists(
+                        "new".to_string(),
+                        abs_path.to_owned(),
+                    ));
+                }
+
+                let mut parents = vec![abs_path.parent().unwrap()];
+                while parents.last().unwrap() != dir {
+                    let last = *parents.last().unwrap();
+                    debug!(
+                        logger,
+                        "adding parent '{}'",
+                        last.parent().unwrap().display()
+                    );
+                    parents.push(last.parent().unwrap());
+                }
+
+                for parent in parents.iter() {
+                    if parent.join(Path::new(PROJECT_FILE_NAME)).exists() {
+                        return Err(Error::IsInExistingProject(
+                            "new".to_string(),
+                            path.to_owned(),
+                        ));
+                    }
+                }
+
+                // TODO: implement templating
+
+                // TODO: implement git
+                actions.push(Action::Touch {
+                    path: abs_path.to_owned(),
+                    mkparents: true,
+                });
+
+                Ok(actions)
             }
             _ => Ok(Vec::new()),
         }
@@ -336,15 +498,12 @@ impl<'a> Command<'a> {
     }
 }
 
-#[derive(Debug)]
-enum IOType {
-    File,
-    Directory,
-}
+
 
 #[derive(Debug)]
 enum Action {
-    Create { path: PathBuf, iotype: IOType },
+    Mkdir { path: PathBuf },
+    Touch { path: PathBuf, mkparents: bool },
     Move { from: PathBuf, to: PathBuf },
     Copy { from: PathBuf, to: PathBuf },
     Message(String),
@@ -356,7 +515,6 @@ enum Action {
 impl Action {
     fn commit(&self) {
         match self {
-            Action::Create { path, iotype } => {}
             Action::Move { from, to } => {}
             Action::Copy { from, to } => {}
             Action::Git(git_action) => {}
@@ -370,12 +528,15 @@ impl Action {
 struct GitAction;
 
 
-
+#[derive(Debug)]
 enum Error {
     NoSuchFileOrDirectory(String, PathBuf),
     FileExists(String, PathBuf),
     DirectoryExists(String, PathBuf),
     DirectoryNotEmpty(String, PathBuf),
+    PathNoDirectory(String, PathBuf),
+    PathNotRelative(String, PathBuf),
+    IsInExistingProject(String, PathBuf),
 }
 
 // type aliea for result
