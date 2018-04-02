@@ -33,6 +33,12 @@ pub enum Command<'a> {
     Empty,
 }
 
+impl<'a> Default for Command<'a> {
+    fn default() -> Self {
+        Command::Empty
+    }
+}
+
 impl<'a> Command<'a> {
     pub fn from_matches(matches: &'a ArgMatches, logger: &slog::Logger) -> Command<'a> {
         let command = match matches.subcommand() {

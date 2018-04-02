@@ -1,4 +1,5 @@
 use std::path::{PathBuf, Path};
+use std::io;
 use slog;
 
 use command::Command;
@@ -17,17 +18,31 @@ pub enum Action {
     Noop,
 }
 
-impl Action {
-    fn commit(&self) {
+pub trait Actionable {
+    fn commit(&self) -> io::Result<()>;
+}
+
+
+impl Actionable for Action {
+    fn commit(&self) -> io::Result<()> {
         match self {
-            Action::Move { from, to } => {}
-            Action::Copy { from, to } => {}
-            Action::Git(git_action) => {}
-            Action::Message(String) => {}
-            Noop => {}
+            _ => Ok(()),
         }
     }
 }
+
+
+impl<T> Actionable for Vec<T>
+where
+    T: Actionable,
+{
+    fn commit(&self) -> io::Result<()> {
+        for action in self.iter() {}
+        Ok(())
+
+    }
+}
+
 
 #[derive(Debug)]
 struct GitAction;
@@ -241,6 +256,5 @@ impl<'a> Command<'a> {
 
             _ => Ok(Vec::new()),
         }
-
     }
 }
