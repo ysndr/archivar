@@ -4,6 +4,8 @@ use std::env;
 use slog;
 use clap::{Arg, App, SubCommand, ArgMatches};
 
+use error::Error;
+
 
 #[derive(Debug)]
 pub enum Command<'a> {
@@ -40,13 +42,16 @@ impl<'a> Default for Command<'a> {
 }
 
 impl<'a> Command<'a> {
-    pub fn from_matches(matches: &'a ArgMatches, logger: &slog::Logger) -> Command<'a> {
+    pub fn from_matches(
+        matches: &'a ArgMatches,
+        logger: &slog::Logger,
+    ) -> Result<Command<'a>, Error> {
         let command = match matches.subcommand() {
-            ("init", Some(sub_m)) => Self::init(sub_m),
-            ("new", Some(sub_m)) => Self::new(sub_m),
-            ("archive", Some(sub_m)) => Self::archive(sub_m),
-            ("unarchive", Some(sub_m)) => Self::unarchive(sub_m),
-            _ => Command::Empty,
+            ("init", Some(sub_m)) => Ok(Self::init(sub_m)),
+            ("new", Some(sub_m)) => Ok(Self::new(sub_m)),
+            ("archive", Some(sub_m)) => Ok(Self::archive(sub_m)),
+            ("unarchive", Some(sub_m)) => Ok(Self::unarchive(sub_m)),
+            (command, _) => Err(Error::CommandUnknown(command.clone().to_string())),
         };
 
         info!(logger, "command given: {:?}", command);
