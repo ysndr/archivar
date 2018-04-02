@@ -19,12 +19,12 @@ pub enum Action {
 }
 
 pub trait Actionable {
-    fn commit(&self) -> io::Result<()>;
+    fn commit(&self, logger: &slog::Logger) -> io::Result<()>;
 }
 
 
 impl Actionable for Action {
-    fn commit(&self) -> io::Result<()> {
+    fn commit(&self, logger: &slog::Logger) -> io::Result<()> {
         match self {
             _ => Ok(()),
         }
@@ -32,11 +32,11 @@ impl Actionable for Action {
 }
 
 
-impl<T> Actionable for Vec<T>
-where
-    T: Actionable,
-{
-    fn commit(&self) -> io::Result<()> {
+
+
+
+impl Actionable for Vec<Action> {
+    fn commit(&self, logger: &slog::Logger) -> io::Result<()> {
         for action in self.iter() {}
         Ok(())
 
