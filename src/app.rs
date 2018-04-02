@@ -5,7 +5,7 @@ use slog;
 use logger::Logger;
 use command::Command;
 use action::Action;
-
+use error::Error;
 
 #[derive(Debug, Default)]
 pub struct Archivar<'a> {
@@ -16,7 +16,7 @@ pub struct Archivar<'a> {
 }
 
 
-impl<'a> Archivar<'a> {
+impl<'a, 'args> Archivar<'a> {
     pub fn match_args(&mut self) {
         let matches = App::new("Archivar")
             .version("0.1.0")
@@ -145,4 +145,24 @@ impl<'a> Archivar<'a> {
 
         self.logger = Rc::new(Logger::new(min_log_level));
     }
+    pub fn build_command(&'a mut self) -> Result<(), Error> {
+        match Command::from_matches(&self.matches, &self.logger) {
+            Ok(command) => {
+                self.command = command;
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+    pub fn build_actions(&mut self) -> Result<(), Error> {
+        match self.command.to_actions(&self.logger) {
+            Ok(actions) => {
+                self.actions = actions;
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    fn handle_error(&self, e: Error) {}
 }
