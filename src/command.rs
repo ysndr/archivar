@@ -8,7 +8,7 @@ use error::Error;
 
 
 #[derive(Debug)]
-pub enum Command<'a> {
+pub enum Command {
     // archivar init ..
     Init { path: PathBuf, with_git: bool },
     // archivar new path ..
@@ -18,7 +18,7 @@ pub enum Command<'a> {
 
         template: Option<PathBuf>,
         // template_attr: String,
-        template_args: Vec<&'a str>,
+        template_args: Vec<String>, // TODO: revisit
 
         no_commit: bool,
     },
@@ -35,17 +35,14 @@ pub enum Command<'a> {
     Empty,
 }
 
-impl<'a> Default for Command<'a> {
+impl Default for Command {
     fn default() -> Self {
         Command::Empty
     }
 }
 
-impl<'a> Command<'a> {
-    pub fn from_matches(
-        matches: &'a ArgMatches,
-        logger: &slog::Logger,
-    ) -> Result<Command<'a>, Error> {
+impl Command {
+    pub fn from_matches(matches: &ArgMatches, logger: &slog::Logger) -> Result<Command, Error> {
         let command = match matches.subcommand() {
             ("init", Some(sub_m)) => Ok(Self::init(sub_m)),
             ("new", Some(sub_m)) => Ok(Self::new(sub_m)),
@@ -58,7 +55,7 @@ impl<'a> Command<'a> {
         command
     }
 
-    fn init(matches: &ArgMatches) -> Command<'a> {
+    fn init(matches: &ArgMatches) -> Command {
         let path = matches.value_of("PATH").map_or(
             env::current_dir().unwrap(),
             |p| {
@@ -78,7 +75,7 @@ impl<'a> Command<'a> {
         }
     }
 
-    fn new(matches: &'a ArgMatches) -> Command<'a> {
+    fn new(matches: &ArgMatches) -> Command {
         let root = matches.value_of("ARCHIVAR_ROOT").map_or(
             env::current_dir().unwrap(),
             PathBuf::from,
@@ -87,9 +84,10 @@ impl<'a> Command<'a> {
         let template = matches.value_of("TEMPLATE").map_or(None, |t| {
             Some(root.join(Path::new(t)))
         });
-        let template_args = matches
+        let template_args: Vec<String> = matches
             .values_of("TEMPLATE_ARGS")
             .unwrap_or_default()
+            .map(|_str| String::from(_str))
             .collect();
         let no_commit = matches.is_present("NO_COMMIT");
 
@@ -103,7 +101,7 @@ impl<'a> Command<'a> {
         }
     }
 
-    fn archive(matches: &ArgMatches) -> Command<'a> {
+    fn archive(matches: &ArgMatches) -> Command {
         let root = matches.value_of("ARCHIVAR_ROOT").map_or(
             env::current_dir().unwrap(),
             PathBuf::from,
@@ -119,7 +117,7 @@ impl<'a> Command<'a> {
         }
     }
 
-    fn unarchive(matches: &ArgMatches) -> Command<'a> {
+    fn unarchive(matches: &ArgMatches) -> Command {
         let root = matches.value_of("ARCHIVAR_ROOT").map_or(
             env::current_dir().unwrap(),
             PathBuf::from,

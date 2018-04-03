@@ -92,7 +92,7 @@ impl Actionable for Vec<Action> {
 struct GitAction;
 
 
-impl<'a> Command<'a> {
+impl Command {
     pub fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Action>> {
         let mut actions = Vec::new();
         match self {

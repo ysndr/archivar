@@ -20,4 +20,7 @@ fn main() {
     let mut app = App::default();
     app.match_args();
     app.configure_logger();
+    app.build_command();
+    app.build_actions();
+
 }

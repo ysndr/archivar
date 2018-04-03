@@ -8,15 +8,15 @@ use action::Action;
 use error::Error;
 
 #[derive(Debug, Default)]
-pub struct Archivar<'a> {
-    logger: Rc<Logger>,
-    matches: ArgMatches<'a>,
-    command: Command<'a>,
+pub struct Archivar<'args> {
+    pub logger: Rc<Logger>,
+    matches: ArgMatches<'args>,
+    command: Command,
     actions: Vec<Action>,
 }
 
 
-impl<'a, 'args> Archivar<'a> {
+impl<'args> Archivar<'args> {
     pub fn match_args(&mut self) {
         let matches = App::new("Archivar")
             .version("0.1.0")
@@ -145,7 +145,7 @@ impl<'a, 'args> Archivar<'a> {
 
         self.logger = Rc::new(Logger::new(min_log_level));
     }
-    pub fn build_command(&'a mut self) -> Result<(), Error> {
+    pub fn build_command(&mut self) -> Result<(), Error> {
         match Command::from_matches(&self.matches, &self.logger) {
             Ok(command) => {
                 self.command = command;
@@ -154,7 +154,7 @@ impl<'a, 'args> Archivar<'a> {
             Err(e) => Err(e),
         }
     }
-    pub fn build_actions(&mut self) -> Result<(), Error> {
+    pub fn build_actions(mut self) -> Result<(), Error> {
         match self.command.to_actions(&self.logger) {
             Ok(actions) => {
                 self.actions = actions;
