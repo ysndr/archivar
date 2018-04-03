@@ -4,7 +4,7 @@ use std::env;
 use slog;
 use clap::{Arg, App, SubCommand, ArgMatches};
 
-use error::Error;
+use error::*;
 
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ impl Default for Command {
 }
 
 impl Command {
-    pub fn from_matches(matches: &ArgMatches, logger: &slog::Logger) -> Result<Command, Error> {
+    pub fn from_matches(matches: &ArgMatches, logger: &slog::Logger) -> Result<Command> {
         let command = match matches.subcommand() {
             ("init", Some(sub_m)) => Ok(Self::init(sub_m)),
             ("new", Some(sub_m)) => Ok(Self::new(sub_m)),

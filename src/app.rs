@@ -5,7 +5,7 @@ use slog;
 use logger::Logger;
 use command::Command;
 use action::Action;
-use error::Error;
+use error::*;
 
 #[derive(Debug, Default)]
 pub struct Archivar<'args> {
@@ -17,7 +17,7 @@ pub struct Archivar<'args> {
 
 
 impl<'args> Archivar<'args> {
-    pub fn match_args(&mut self) {
+    pub fn match_args(&mut self) -> Result<()> {
         let matches = App::new("Archivar")
             .version("0.1.0")
             .author("Yannik Sander <me@ysndr.de>")
@@ -135,7 +135,7 @@ impl<'args> Archivar<'args> {
             .get_matches();
         self.matches = matches;
     }
-    pub fn configure_logger(&mut self) {
+    pub fn configure_logger(&mut self) -> Result<()> {
         let min_log_level = match self.matches.occurrences_of("VERBOSITY") {
             0 => slog::Level::Warning,
             1 => slog::Level::Info,
@@ -145,7 +145,7 @@ impl<'args> Archivar<'args> {
 
         self.logger = Rc::new(Logger::new(min_log_level));
     }
-    pub fn build_command(&mut self) -> Result<(), Error> {
+    pub fn build_command(&mut self) -> Result<()> {
         match Command::from_matches(&self.matches, &self.logger) {
             Ok(command) => {
                 self.command = command;
@@ -154,7 +154,7 @@ impl<'args> Archivar<'args> {
             Err(e) => Err(e),
         }
     }
-    pub fn build_actions(mut self) -> Result<(), Error> {
+    pub fn build_actions(mut self) -> Result<()> {
         match self.command.to_actions(&self.logger) {
             Ok(actions) => {
                 self.actions = actions;

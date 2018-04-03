@@ -1,35 +1,22 @@
+
 use std;
 use std::path::PathBuf;
 use std::fmt;
 
+use error_chain;
 
-#[derive(Debug)]
-pub enum Error {
-    NoSuchFileOrDirectory(String, PathBuf),
-    FileExists(String, PathBuf),
-    DirectoryExists(String, PathBuf),
-    DirectoryNotEmpty(String, PathBuf),
-    PathNoDirectory(String, PathBuf),
-    PathNotRelative(String, PathBuf),
-    NoProjectFound(String, PathBuf),
-    NoArchivarFound(String, PathBuf),
-    ProjectExists(String, PathBuf, bool),
-    ArchiveReferenced(String, PathBuf),
-    CommandUnknown(String),
-}
+error_chain! {
 
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::NoSuchFileOrDirectory(cmd, path) => {
-                write!(f, "[{}] NoSuchFileOrDirectory '{}'", cmd, path.display())
-            }
-            _ => write!(f, "hello"),
-
+    errors {
+        InvalidCommandArgs(arg: String, content: String, fault: String){
+            description("invalid input! could not make actions")
+            display("invalid input! could not make actions
+                    (argument: {}; content: {}, fault: {})",
+                    arg, content, fault)
         }
-    }
-}
 
-// type aliea for result
-pub type Result<T> = std::result::Result<T, Error>;
+    }
+
+
+
+}

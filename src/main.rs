@@ -5,6 +5,9 @@ extern crate slog_async;
 
 extern crate clap;
 
+#[macro_use]
+extern crate error_chain;
+
 
 mod app;
 mod constants;
