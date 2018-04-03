@@ -1,5 +1,7 @@
 use std::path::{PathBuf, Path};
+use std::fs;
 use std::io;
+use std::os::unix::fs::PermissionsExt;
 use slog;
 
 use command::Command;
@@ -13,6 +15,7 @@ pub enum Action {
     Touch { path: PathBuf, mkparents: bool },
     Move { from: PathBuf, to: PathBuf },
     Copy { from: PathBuf, to: PathBuf },
+    Chmod { target: PathBuf, mode: u32 },
     Message(String),
     Git(GitAction),
     Noop,
@@ -26,6 +29,47 @@ pub trait Actionable {
 impl Actionable for Action {
     fn commit(&self, logger: &slog::Logger) -> io::Result<()> {
         match self {
+            Action::Mkdir { path } => {
+                info!(logger, "mkdir {}", path.display());
+                fs::create_dir_all(&path)
+            }
+            Action::Touch { path, mkparents } => {
+                info!(logger, "touch file {}", path.display());
+                if *mkparents {
+                    debug!(logger, "making parant paths");
+                    fs::create_dir_all(&path.parent().unwrap())
+                } else {
+                    Ok(())
+                }.and_then(|_| {
+                    debug!(logger, "writing file to fs");
+                    fs::OpenOptions::new().create(true).write(true).open(&path)
+                })
+                    .and(Ok(()))
+            }
+            Action::Move { from, to } => {
+                info!(logger, "move '{}' -> '{}'", from.display(), to.display());
+                fs::rename(&from, &to)
+            }
+            Action::Copy { from, to } => {
+                info!(logger, "copy '{}' -> '{}'", from.display(), to.display());
+                fs::copy(&from, &to).and(Ok(()))
+            }
+            Action::Chmod { target, mode } => {
+                info!(
+                    logger,
+                    "set permission of '{}' to `{:x}`",
+                    target.display(),
+                    mode
+                );
+                target
+                    .metadata()
+                    .and_then(|meta| Ok(meta.permissions()))
+                    .and_then(|mut perms| Ok(perms.set_mode(*mode)))
+            }
+            Action::Message(msg) => {
+                info!(logger, "{}", msg);
+                Ok(())
+            }
             _ => Ok(()),
         }
     }
