@@ -48,7 +48,7 @@ impl Command {
             ("new", Some(sub_m)) => Ok(Self::new(sub_m)),
             ("archive", Some(sub_m)) => Ok(Self::archive(sub_m)),
             ("unarchive", Some(sub_m)) => Ok(Self::unarchive(sub_m)),
-            (command, _) => Err(Error::CommandUnknown(command.clone().to_string())),
+            (command, _) => Err(ErrorKind::CommandUnknown(command.to_owned()).into()),
         };
 
         info!(logger, "command given: {:?}", command);

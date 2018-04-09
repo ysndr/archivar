@@ -98,15 +98,21 @@ impl Command {
         match self {
             Command::Init { path, with_git } => {
                 if path.exists() && !path.is_dir() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "path",
-                        path,
-                        "not a directory",
-                    )).into();
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "not a directory".to_owned(),
+                        ).into(),
+                    );
                 }
                 if path.exists() && !path.read_dir().unwrap().count() > 0 {
                     return Err(
-                        ErrorKind::InvalidCommandArgs("path", path, "not empty").into(),
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "not empty".to_owned(),
+                        ).into(),
                     );
                 } else {
                     let mut archivar_file_path = path.to_owned();
@@ -132,19 +138,23 @@ impl Command {
                 no_commit,
             } => {
                 if !path.is_relative() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "path",
-                        path,
-                        "is not relative",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "is not relative".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 if !dir.join(ARCHIVAR_FILE_NAME).exists() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "ARCHIVAR_ROOT (dir)",
-                        dir,
-                        "no Archivar found",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "ARCHIVAR_ROOT (dir)".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "no Archivar found".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 let abs_path = dir.join(path);
@@ -154,7 +164,7 @@ impl Command {
                 //     return Err(Error::DirectoryExists(
                 //         "new".to_string(),
                 //         abs_path.to_owned(),
-                //     ));
+                //     ).into());
                 // }
 
                 let mut parents = vec![abs_path.parent().unwrap()];
@@ -172,16 +182,22 @@ impl Command {
                     if parent.join(Path::new(PROJECT_FILE_NAME)).exists() {
                         return Err(
                             ErrorKind::InvalidCommandArgs(
-                                "path",
-                                path,
-                                "is inside an existing project",
+                                "path".to_owned(),
+                                path.to_str().unwrap().to_owned(),
+                                "is inside an existing project".to_owned(),
                             ).into(),
                         );
                     }
                 }
 
                 if path.starts_with("archive") {
-                    return Err(ErrorKind::InvalidCommandArgs("path", path, "is archived"));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "is archived".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 let archived_abs_path = dir.join("archive").join(path);
@@ -189,9 +205,10 @@ impl Command {
                 if archived_abs_path.exists() {
                     return Err(
                         ErrorKind::InvalidCommandArgs(
-                            "path",
-                            path,
-                            "already exists in archived (use `archivar unarchive <path>`)",
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "already exists in archived (use `archivar unarchive <path>`)"
+                                .to_owned(),
                         ).into(),
                     );
                 }
@@ -213,16 +230,22 @@ impl Command {
             } => {
                 if !path.is_relative() {
                     return Err(
-                        ErrorKind::InvalidCommandArgs("path", path, "is not relative").into(),
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "is not relative".to_owned(),
+                        ).into(),
                     );
                 }
 
                 if !dir.join(ARCHIVAR_FILE_NAME).exists() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "ARCHIVAR_ROOT (dir)",
-                        dir,
-                        "no Archivar found",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "ARCHIVAR_ROOT (dir)".to_owned(),
+                            dir.to_str().unwrap().to_owned(),
+                            "no Archivar found".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 let abs_path = dir.join(path);
@@ -230,28 +253,32 @@ impl Command {
                 if !abs_path.exists() {
                     return Err(
                         ErrorKind::InvalidCommandArgs(
-                            "<ARCHIVAR_ROOT>/<path>",
-                            abs_path,
-                            "No such directory",
-                        ).into()),
+                            "<ARCHIVAR_ROOT>/<path>".to_owned(),
+                            abs_path.to_str().unwrap().to_owned(),
+                            "No such directory".to_owned(),
+                        ).into(),
                     );
                 }
 
                 let project_file_path = abs_path.join(PROJECT_FILE_NAME);
                 if !project_file_path.exists() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "path",
-                        path,
-                        "could not find project here",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "could not find project here".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 if path.starts_with("archive") {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "path",
-                        path,
-                        "points into archive",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "points into archive".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 let archived_abs_path = dir.join("archive").join(path);
@@ -270,19 +297,23 @@ impl Command {
                 no_commit,
             } => {
                 if !path.is_relative() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "path",
-                        path,
-                        "is not relative",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "is not relative".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 if !dir.join(ARCHIVAR_FILE_NAME).exists() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "ARCHIVAR_ROOT (dir)",
-                        dir,
-                        "no Archivar found",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "ARCHIVAR_ROOT (dir)".to_owned(),
+                            dir.to_str().unwrap().to_owned(),
+                            "no Archivar found".to_owned(),
+                        ).into(),
+                    );
                 }
 
 
@@ -300,20 +331,24 @@ impl Command {
 
 
                 if !archived_abs_path.exists() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "<ARCHIVAR_ROOT>/<path>",
-                        abs_path,
-                        "No such directory",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "<ARCHIVAR_ROOT>/<path>".to_owned(),
+                            abs_path.to_str().unwrap().to_owned(),
+                            "No such directory".to_owned(),
+                        ).into(),
+                    );
                 }
 
                 let project_file_path = archived_abs_path.join(PROJECT_FILE_NAME);
                 if !project_file_path.exists() {
-                    return Err(ErrorKind::InvalidCommandArgs(
-                        "path",
-                        path,
-                        "could not find project here",
-                    ));
+                    return Err(
+                        ErrorKind::InvalidCommandArgs(
+                            "path".to_owned(),
+                            path.to_str().unwrap().to_owned(),
+                            "could not find project here".to_owned(),
+                        ).into(),
+                    );
                 }
 
 

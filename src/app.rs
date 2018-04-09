@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use clap::{Arg, App, SubCommand, ArgMatches};
+use clap::{Arg, App, SubCommand, ArgMatches, AppSettings};
 use slog;
 
 use logger::Logger;
@@ -132,8 +132,18 @@ impl<'args> Archivar<'args> {
                             .takes_value(false),
                     ),
             )
-            .get_matches();
-        self.matches = matches;
+            .setting(AppSettings::ColorAuto)
+            .setting(AppSettings::StrictUtf8)
+            .get_matches_safe();
+
+        match matches {
+            Ok(matches) => {
+                self.matches = matches;
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
+
     }
     pub fn configure_logger(&mut self) -> Result<()> {
         let min_log_level = match self.matches.occurrences_of("VERBOSITY") {
@@ -144,6 +154,7 @@ impl<'args> Archivar<'args> {
         };
 
         self.logger = Rc::new(Logger::new(min_log_level));
+        Ok(())
     }
     pub fn build_command(&mut self) -> Result<()> {
         match Command::from_matches(&self.matches, &self.logger) {
