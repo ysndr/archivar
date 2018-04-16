@@ -1,24 +1,22 @@
 #[macro_use]
 extern crate slog;
-extern crate slog_term;
 extern crate slog_async;
+extern crate slog_term;
 
 extern crate clap;
 
 #[macro_use]
 extern crate error_chain;
 
-
-mod app;
-mod constants;
-mod command;
-mod error;
 mod action;
+mod app;
+mod command;
+mod constants;
+mod error;
 mod logger;
 
-
-use error::*;
 use app::Archivar as App;
+use error::*;
 
 fn main() {
     println!("Hello, world!");
@@ -32,7 +30,6 @@ fn main() {
         Ok(()) => {}
         Err(e) if e.kind() == ErrorKind::Clap => println!("{}", e),
         Err(e) => {
-
             println!("error: {}", e);
             for e in e.iter().skip(1) {
                 println!("caused by: {}", e);
@@ -47,5 +44,4 @@ fn main() {
             ::std::process::exit(1);
         }
     }
-
 }
