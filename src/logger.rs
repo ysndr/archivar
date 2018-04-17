@@ -1,9 +1,9 @@
 use std::ops::Deref;
 
 use slog;
-use slog_term;
-use slog_async;
-use slog::Drain;
+use sloggers::terminal::TerminalLoggerBuilder;
+use sloggers::types::{Format, Severity};
+use sloggers::Build;
 
 #[derive(Debug)]
 pub struct Logger {
@@ -11,20 +11,23 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub fn new(level: slog::Level) -> Self {
-        let decorator = slog_term::TermDecorator::new().build();
-        let drain = slog_term::CompactFormat::new(decorator).build().fuse();
-        let drain = slog::LevelFilter::new(drain, slog::Level::Warning).ignore_res();
-        let drain = slog_async::Async::new(drain).build().fuse();
-        let logger = slog::Logger::root(drain, o!());
+    pub fn new(level: Severity) -> Self {
+        let logger = TerminalLoggerBuilder::new()
+            .format(Format::Compact)
+            .level(level)
+            .build()
+            .unwrap();
 
+        info!(logger, "Logging ready!");
+        error!(logger, "Logging ready!");
+        warn!(logger, "Logging ready!");
         Logger { logger }
     }
 }
 
 impl Default for Logger {
     fn default() -> Self {
-        Logger::new(slog::Level::Warning)
+        Logger::new(Severity::Info)
     }
 }
 

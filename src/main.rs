@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate slog;
-extern crate slog_async;
-extern crate slog_term;
+extern crate sloggers;
 
+#[macro_use]
 extern crate clap;
 
 #[macro_use]
@@ -19,29 +19,35 @@ use app::Archivar as App;
 use error::*;
 
 fn main() {
-    println!("Hello, world!");
     let mut app = App::default();
+    error!(&app.logger, "error 1");
+    warn!(&app.logger, "warning 1");
+
     let result = app.match_args()
         .and(app.configure_logger())
         .and(app.build_command())
         .and(app.build_actions());
 
-    match result {
-        Ok(()) => {}
-        Err(e) if e.kind() == ErrorKind::Clap => println!("{}", e),
-        Err(e) => {
-            println!("error: {}", e);
-            for e in e.iter().skip(1) {
-                println!("caused by: {}", e);
-            }
+    error!(&app.logger, "error");
+    warn!(&app.logger, "warning");
 
-            // The backtrace is not always generated. Try to run this example
-            // with `RUST_BACKTRACE=1`.
-            if let Some(backtrace) = e.backtrace() {
-                println!("backtrace: {:?}", backtrace);
-            }
+    if let Err(e) = &result {
+        match *e.kind() {
+            ErrorKind::Clap(_) => println!("{}", e),
+            _ => {
+                error!(app.logger, "error: {}", e);
+                for e in e.iter().skip(1) {
+                    println!("caused by: {}", e);
+                }
 
-            ::std::process::exit(1);
+                // The backtrace is not always generated. Try to run this example
+                // with `RUST_BACKTRACE=1`.
+                if let Some(backtrace) = e.backtrace() {
+                    println!("backtrace: {:?}", backtrace);
+                }
+
+                ::std::process::exit(1);
+            }
         }
-    }
+    };
 }

@@ -1,30 +1,29 @@
-use std::rc::Rc;
-use clap::{Arg, App, SubCommand, ArgMatches, AppSettings};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use slog;
+use sloggers::types::Severity;
+use std::rc::Rc;
 
-use logger::Logger;
-use command::Command;
 use action::Action;
+use command::Command;
 use error::*;
+use logger::Logger;
 
 #[derive(Debug, Default)]
 pub struct Archivar<'args> {
-    pub logger: Rc<Logger>,
+    pub logger: Logger,
     matches: ArgMatches<'args>,
     command: Command,
     actions: Vec<Action>,
 }
 
-
 impl<'args> Archivar<'args> {
     pub fn match_args(&mut self) -> Result<()> {
         let matches = App::new("Archivar")
-            .version("0.1.0")
+            .version(crate_version!())
             .author("Yannik Sander <me@ysndr.de>")
             .about("Tool to archive projects")
             .arg(
                 Arg::with_name("VERBOSITY")
-                    .required(false)
                     .takes_value(false)
                     .short("v")
                     .multiple(true),
@@ -71,9 +70,11 @@ impl<'args> Archivar<'args> {
                             .required(false)
                             .takes_value(true),
                     )
-                    .arg(Arg::with_name("TEMPLATE_ARGS").required(false).multiple(
-                        true,
-                    ))
+                    .arg(
+                        Arg::with_name("TEMPLATE_ARGS")
+                            .required(false)
+                            .multiple(true),
+                    )
                     .arg(
                         Arg::with_name("NO_COMMIT")
                             .help("inhibit git commit")
@@ -134,6 +135,7 @@ impl<'args> Archivar<'args> {
             )
             .setting(AppSettings::ColorAuto)
             .setting(AppSettings::StrictUtf8)
+            .setting(AppSettings::SubcommandRequiredElseHelp)
             .get_matches_safe();
 
         match matches {
@@ -143,17 +145,15 @@ impl<'args> Archivar<'args> {
             }
             Err(e) => Err(e.into()),
         }
-
     }
     pub fn configure_logger(&mut self) -> Result<()> {
         let min_log_level = match self.matches.occurrences_of("VERBOSITY") {
-            0 => slog::Level::Warning,
-            1 => slog::Level::Info,
-            2 => slog::Level::Debug,
-            3 | _ => slog::Level::Trace,
+            0 => Severity::Info,
+            1 => Severity::Debug,
+            2 | _ => Severity::Trace,
         };
 
-        self.logger = Rc::new(Logger::new(min_log_level));
+        self.logger = Logger::new(min_log_level);
         Ok(())
     }
     pub fn build_command(&mut self) -> Result<()> {
@@ -165,7 +165,7 @@ impl<'args> Archivar<'args> {
             Err(e) => Err(e),
         }
     }
-    pub fn build_actions(mut self) -> Result<()> {
+    pub fn build_actions(&mut self) -> Result<()> {
         match self.command.to_actions(&self.logger) {
             Ok(actions) => {
                 self.actions = actions;
