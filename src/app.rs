@@ -1,6 +1,7 @@
-use clap::{App, AppSettings, Arg, ArgMatches, ClapResult, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use slog;
 use sloggers::types::Severity;
+use std::cmp::min;
 use std::rc::Rc;
 
 use action::Action;
@@ -11,48 +12,62 @@ use logger::Logger;
 #[derive(Debug)]
 pub struct Config<'a> {
     log: &'a Logger,
+    matches: ArgMatches<'a>,
+}
+
+impl<'a> Config<'a> {
+    pub fn new(log: &'a Logger, matches: ArgMatches<'a>) -> Self {
+        Self { log, matches }
+    }
 }
 
 #[derive(Debug)]
 pub struct Archivar<'a> {
-    config: Config<'a>,
+    config: &'a Config<'a>,
     command: Option<Command>,
     actions: Option<Vec<Action>>,
 }
 
-impl<'args> Archivar<'args> {
-    pub fn build_command(&mut self) -> Result<()> {
-        match Command::from_matches(&self.matches, &self.logger) {
-            Ok(command) => {
-                self.command = command;
-                debug!(self.logger, "`build_command` was ok");
-                Ok(())
-            }
-            Err(e) => {
-                debug!(self.logger, "`build_command` was not ok");
-                Err(e)
-            }
+impl<'a> Archivar<'a> {
+    pub fn new(config: &'a Config) -> Self {
+        Self {
+            config,
+            command: None,
+            actions: None,
         }
     }
-    pub fn build_actions(&mut self) -> Result<()> {
-        match self.command.to_actions(&self.logger) {
-            Ok(actions) => {
-                self.actions = actions;
-                debug!(self.logger, "`to_actions` was ok");
+    pub fn build_command(&mut self) -> Result<()> {
+        let result = Command::from_matches(&self.config.matches, self.config.log);
+        match result {
+            Ok(command) => {
+                self.command = Some(command);
+                debug!(self.config.log, "`build_command` was ok");
                 Ok(())
             }
-            Err(e) => {
-                debug!(self.logger, "`to_actions` was not ok");
-                Err(e)
-            }
+            Err(e) => bail!(e),
         }
     }
 
+    pub fn build_actions(&mut self) -> Result<()> {
+        let result = match &self.command {
+            Some(command) => command.to_actions(self.config.log),
+            None => bail!("no command yet"),
+        };
+
+        match result {
+            Ok(actions) => {
+                self.actions = Some(actions);
+                debug!(self.config.log, "`build_actions` was ok");
+                Ok(())
+            }
+            Err(e) => bail!(e),
+        }
+    }
     fn handle_error(&self, e: Error) {}
 }
 
-pub fn parse_args<'a>() -> Result<(u64, ArgMatches<'a>)> {
-    App::new("Archivar")
+pub fn parse_args<'a>() -> (u64, ArgMatches<'a>) {
+    let matches = App::new("Archivar")
         .version(crate_version!())
         .author("Yannik Sander <me@ysndr.de>")
         .about("Tool to archive projects")
@@ -170,7 +185,7 @@ pub fn parse_args<'a>() -> Result<(u64, ArgMatches<'a>)> {
         .setting(AppSettings::ColorAuto)
         .setting(AppSettings::StrictUtf8)
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .get_matches_safe()
-        .and_then(|matches| Ok((matches.occurrences_of("VERBOSITY"), matches)))
-        .or_else(|e| bail!(ErrorKind::Clap(e)))
+        .get_matches();
+
+    (matches.occurrences_of("VERBOSITY"), matches)
 }

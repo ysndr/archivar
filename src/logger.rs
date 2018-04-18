@@ -1,9 +1,14 @@
+use slog;
+use slog::*;
+use slog_async;
+use slog_term;
+use std::cmp::min;
+use std::io;
 use std::ops::Deref;
 
-use slog;
-use sloggers::terminal::TerminalLoggerBuilder;
-use sloggers::types::{Format, Severity};
-use sloggers::Build;
+fn eat_timestamp(writer: &mut io::Write) -> io::Result<()> {
+    write!(writer, "::")
+}
 
 #[derive(Debug)]
 pub struct Logger {
@@ -11,23 +16,25 @@ pub struct Logger {
 }
 
 impl Logger {
-    pub fn new(level: Severity) -> Self {
-        let logger = TerminalLoggerBuilder::new()
-            .format(Format::Compact)
-            .level(level)
+    pub fn new(log_level: &Level) -> Self {
+        let decorator = slog_term::TermDecorator::new().build();
+        let drain = slog_term::CompactFormat::new(decorator)
+            .use_custom_timestamp(eat_timestamp)
             .build()
-            .unwrap();
+            .fuse();
+        let drain = slog::LevelFilter::new(drain, *log_level).ignore_res();
+        let drain = slog_async::Async::new(drain).build().fuse();
+        let logger = slog::Logger::root(drain, o!());
 
-        info!(logger, "Logging ready!");
-        error!(logger, "Logging ready!");
-        warn!(logger, "Logging ready!");
+        debug!(&logger, "logger ready");
+
         Logger { logger }
     }
 }
 
 impl Default for Logger {
     fn default() -> Self {
-        Logger::new(Severity::Info)
+        Logger::new(&Level::Warning)
     }
 }
 
