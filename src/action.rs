@@ -1,4 +1,5 @@
 use slog;
+use std::fmt::Debug;
 use std::fs;
 use std::io;
 use std::os::unix::fs::PermissionsExt;
@@ -21,7 +22,7 @@ pub enum Action {
     Noop,
 }
 
-pub trait Actionable {
+pub trait Actionable: Debug {
     fn commit(&self, logger: &slog::Logger) -> io::Result<()>;
 }
 
@@ -85,8 +86,8 @@ impl Actionable for Vec<Action> {
 struct GitAction;
 
 impl Command {
-    pub fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Action>> {
-        let mut actions = Vec::new();
+    pub fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Box<Actionable>>> {
+        let mut actions: Vec<Box<Actionable>> = Vec::new();
         match self {
             Command::Init { path, with_git } => {
                 if path.exists() && !path.is_dir() {
@@ -105,16 +106,16 @@ impl Command {
                 } else {
                     let mut archivar_file_path = path.to_owned();
                     archivar_file_path.push(ARCHIVAR_FILE_NAME);
-                    actions.push(Action::Touch {
+                    actions.push(Box::new(Action::Touch {
                         path: archivar_file_path,
                         mkparents: true,
-                    })
+                    }))
                 }
                 if *with_git {
-                    actions.push(Action::Noop);
+                    actions.push(Box::new(Action::Noop));
                 }
 
-                actions.push(Action::Message("done!".to_string()));
+                actions.push(Box::new(Action::Message("done!".to_string())));
 
                 Ok(actions)
             }
@@ -192,17 +193,15 @@ impl Command {
                 }
 
                 // TODO: implement git
-                actions.push(Action::Touch {
+                actions.push(Box::new(Action::Touch {
                     path: abs_path.to_owned(),
                     mkparents: true,
-                });
+                }));
 
                 // TODO: implement templating
                 if let Some(template_path) = template {
-                    actions.push(Template::make(
-                        template_path.to_owned(),
-                        abs_path.to_owned(),
-                    ))
+                    let template_actions = Template::make(&template_path, &abs_path, logger)?;
+                    actions.push(Box::new(template_actions));
                 }
 
                 Ok(actions)
@@ -258,10 +257,10 @@ impl Command {
 
                 let archived_abs_path = dir.join("archive").join(path);
 
-                actions.push(Action::Move {
+                actions.push(Box::new(Action::Move {
                     from: abs_path,
                     to: archived_abs_path,
-                });
+                }));
 
                 Ok(actions)
             }
@@ -315,10 +314,10 @@ impl Command {
                     ).into());
                 }
 
-                actions.push(Action::Move {
+                actions.push(Box::new(Action::Move {
                     from: archived_abs_path,
                     to: abs_path,
-                });
+                }));
 
                 Ok(actions)
             }

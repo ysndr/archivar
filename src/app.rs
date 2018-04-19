@@ -1,3 +1,4 @@
+use action::Actionable;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use action::Action;
@@ -20,7 +21,7 @@ impl<'a> Config<'a> {
 pub struct Archivar<'a> {
     config: Config<'a>,
     command: Command,
-    actions: Option<Vec<Action>>,
+    actions: Option<Vec<Box<Actionable>>>,
 }
 
 impl<'a> Archivar<'a> {
