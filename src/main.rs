@@ -17,6 +17,7 @@ mod command;
 mod constants;
 mod error;
 mod logger;
+mod template;
 
 use app::Archivar as App;
 use app::Config;

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use command::Command;
 use constants::*;
 use error::*;
+use template::Template;
 
 #[derive(Debug)]
 pub enum Action {
