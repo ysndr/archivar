@@ -90,6 +90,7 @@ impl Command {
         let mut actions: Vec<Box<Actionable>> = Vec::new();
         match self {
             Command::Init { path, with_git } => {
+                debug!(logger, "creating actions for command::init");
                 if path.exists() && !path.is_dir() {
                     return Err(ErrorKind::InvalidCommandArgs(
                         "path".to_owned(),
@@ -128,6 +129,8 @@ impl Command {
                 no_commit,
             } => {
                 debug!(logger, "creating actions for command::new");
+                let dir = dir.canonicalize()?;
+
                 if !path.is_relative() {
                     return Err(ErrorKind::InvalidCommandArgs(
                         "path".to_owned(),
@@ -145,6 +148,7 @@ impl Command {
                 }
 
                 let abs_path = dir.join(path);
+                debug!(logger, "abspath"; "abspath" => %abs_path.display());
 
                 // Question: add to archivar afterwards
                 // if abs_path.exists() {
@@ -155,7 +159,7 @@ impl Command {
                 // }
 
                 let mut parents = vec![abs_path.parent().unwrap()];
-                while parents.last().unwrap() != dir {
+                while *parents.last().unwrap() != dir {
                     let last = *parents.last().unwrap();
                     trace!(
                         logger,
@@ -212,6 +216,10 @@ impl Command {
                 path,
                 no_commit,
             } => {
+                debug!(logger, "creating actions for command::archive");
+
+                let dir = dir.canonicalize()?;
+
                 if !path.is_relative() {
                     return Err(ErrorKind::InvalidCommandArgs(
                         "path".to_owned(),
@@ -265,11 +273,14 @@ impl Command {
                 Ok(actions)
             }
 
-            Command::Archive {
+            Command::Unarchive {
                 dir,
                 path,
                 no_commit,
             } => {
+                let dir = dir.canonicalize()?;
+
+                debug!(logger, "creating actions for command::unarchive");
                 if !path.is_relative() {
                     return Err(ErrorKind::InvalidCommandArgs(
                         "path".to_owned(),
