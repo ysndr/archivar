@@ -20,17 +20,34 @@ mod logger;
 
 use app::Archivar as App;
 use app::Config;
+use command::Command;
 use error::*;
 use logger::Logger;
 use slog::Level;
 use std::cmp::min;
 
 fn main() {
-    let _ret = run();
+    if let Err(e) = run() {
+        match *e.kind() {
+            ErrorKind::Clap(_) => println!("{}", e),
+            _ => {
+                crit!(Logger::default(), "error: {}", e);
+                for e in e.iter().skip(1) {
+                    crit!(Logger::default(), "caused by: {}", e);
+                }
+
+                // The backtrace is not always generated. Try to run this example
+                // with `RUST_BACKTRACE=1`.
+                if let Some(backtrace) = e.backtrace() {
+                    crit!(Logger::default(), "backtrace: {:?}", backtrace);
+                }
+            }
+        }
+    }
 }
 
-fn run() {
-    let (log_level, matches) = app::parse_args();
+fn run() -> Result<()> {
+    let (log_level, matches) = app::parse_args()?;
 
     let log_level = match log_level {
         1...3 => Level::from_usize(3 + min(log_level as usize, 3)).unwrap(),
@@ -38,31 +55,11 @@ fn run() {
     };
 
     let log = Logger::new(&log_level);
+    let command = Command::from_matches(&matches, &log)?;
 
-    let config = Config::new(&log, matches);
-    let mut app = App::new(&config);
+    let config = Config::new(&log);
 
-    let result = app.build_command().and_then(|_| app.build_actions());
+    let mut app = App::new(config, command);
 
-    info!(log, "info;");
-    debug!(log, "debug");
-    trace!(log, "trace");
-
-    if let Err(e) = result {
-        match *e.kind() {
-            ErrorKind::Clap(_) => println!("{}", e),
-            _ => {
-                crit!(log, "error: {}", e);
-                for e in e.iter().skip(1) {
-                    println!("caused by: {}", e);
-                }
-
-                // The backtrace is not always generated. Try to run this example
-                // with `RUST_BACKTRACE=1`.
-                if let Some(backtrace) = e.backtrace() {
-                    println!("backtrace: {:?}", backtrace);
-                }
-            }
-        }
-    };
+    app.make_actions()
 }

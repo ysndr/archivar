@@ -1,16 +1,18 @@
-use std::path::{PathBuf, Path};
 use std::env;
+use std::path::{Path, PathBuf};
 
+use clap::{App, Arg, ArgMatches, SubCommand};
 use slog;
-use clap::{Arg, App, SubCommand, ArgMatches};
 
 use error::*;
-
 
 #[derive(Debug)]
 pub enum Command {
     // archivar init ..
-    Init { path: PathBuf, with_git: bool },
+    Init {
+        path: PathBuf,
+        with_git: bool,
+    },
     // archivar new path ..
     New {
         path: PathBuf,
@@ -56,17 +58,16 @@ impl Command {
     }
 
     fn init(matches: &ArgMatches) -> Command {
-        let path = matches.value_of("PATH").map_or(
-            env::current_dir().unwrap(),
-            |p| {
+        let path = matches
+            .value_of("PATH")
+            .map_or(env::current_dir().unwrap(), |p| {
                 let pp = PathBuf::from(p);
                 if pp.is_relative() {
                     env::current_dir().unwrap().join(pp)
                 } else {
                     pp
                 }
-            },
-        );
+            });
         let no_git = matches.is_present("GIT_DISABLED");
 
         Command::Init {
@@ -76,14 +77,13 @@ impl Command {
     }
 
     fn new(matches: &ArgMatches) -> Command {
-        let root = matches.value_of("ARCHIVAR_ROOT").map_or(
-            env::current_dir().unwrap(),
-            PathBuf::from,
-        );
+        let root = matches
+            .value_of("ARCHIVAR_ROOT")
+            .map_or(env::current_dir().unwrap(), PathBuf::from);
         let path = PathBuf::from(matches.value_of("PATH").unwrap());
-        let template = matches.value_of("TEMPLATE").map_or(None, |t| {
-            Some(root.join(Path::new(t)))
-        });
+        let template = matches
+            .value_of("TEMPLATE")
+            .map_or(None, |t| Some(root.join(Path::new(t))));
         let template_args: Vec<String> = matches
             .values_of("TEMPLATE_ARGS")
             .unwrap_or_default()
@@ -102,10 +102,9 @@ impl Command {
     }
 
     fn archive(matches: &ArgMatches) -> Command {
-        let root = matches.value_of("ARCHIVAR_ROOT").map_or(
-            env::current_dir().unwrap(),
-            PathBuf::from,
-        );
+        let root = matches
+            .value_of("ARCHIVAR_ROOT")
+            .map_or(env::current_dir().unwrap(), PathBuf::from);
         let path = PathBuf::from(matches.value_of("PATH").unwrap());
         let no_commit = matches.is_present("NO_COMMIT");
 
@@ -118,10 +117,9 @@ impl Command {
     }
 
     fn unarchive(matches: &ArgMatches) -> Command {
-        let root = matches.value_of("ARCHIVAR_ROOT").map_or(
-            env::current_dir().unwrap(),
-            PathBuf::from,
-        );
+        let root = matches
+            .value_of("ARCHIVAR_ROOT")
+            .map_or(env::current_dir().unwrap(), PathBuf::from);
         let path = PathBuf::from(matches.value_of("PATH").unwrap());
         let no_commit = matches.is_present("NO_COMMIT");
 

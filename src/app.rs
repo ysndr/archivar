@@ -1,8 +1,4 @@
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use slog;
-use sloggers::types::Severity;
-use std::cmp::min;
-use std::rc::Rc;
 
 use action::Action;
 use command::Command;
@@ -12,52 +8,37 @@ use logger::Logger;
 #[derive(Debug)]
 pub struct Config<'a> {
     log: &'a Logger,
-    matches: ArgMatches<'a>,
 }
 
 impl<'a> Config<'a> {
-    pub fn new(log: &'a Logger, matches: ArgMatches<'a>) -> Self {
-        Self { log, matches }
+    pub fn new(log: &'a Logger) -> Self {
+        Self { log }
     }
 }
 
 #[derive(Debug)]
 pub struct Archivar<'a> {
-    config: &'a Config<'a>,
-    command: Option<Command>,
+    config: Config<'a>,
+    command: Command,
     actions: Option<Vec<Action>>,
 }
 
 impl<'a> Archivar<'a> {
-    pub fn new(config: &'a Config) -> Self {
+    pub fn new(config: Config<'a>, command: Command) -> Self {
         Self {
             config,
-            command: None,
+            command,
             actions: None,
         }
     }
-    pub fn build_command(&mut self) -> Result<()> {
-        let result = Command::from_matches(&self.config.matches, self.config.log);
-        match result {
-            Ok(command) => {
-                self.command = Some(command);
-                debug!(self.config.log, "`build_command` was ok");
-                Ok(())
-            }
-            Err(e) => bail!(e),
-        }
-    }
 
-    pub fn build_actions(&mut self) -> Result<()> {
-        let result = match &self.command {
-            Some(command) => command.to_actions(self.config.log),
-            None => bail!("no command yet"),
-        };
+    pub fn make_actions(&mut self) -> Result<()> {
+        let result = self.command.to_actions(self.config.log);
 
         match result {
             Ok(actions) => {
                 self.actions = Some(actions);
-                debug!(self.config.log, "`build_actions` was ok");
+                debug!(self.config.log, "`make_actions` was ok"; "actions" => ?self.actions);
                 Ok(())
             }
             Err(e) => bail!(e),
@@ -66,8 +47,8 @@ impl<'a> Archivar<'a> {
     fn handle_error(&self, e: Error) {}
 }
 
-pub fn parse_args<'a>() -> (u64, ArgMatches<'a>) {
-    let matches = App::new("Archivar")
+pub fn parse_args<'a>() -> Result<(u64, ArgMatches<'a>)> {
+    App::new("Archivar")
         .version(crate_version!())
         .author("Yannik Sander <me@ysndr.de>")
         .about("Tool to archive projects")
@@ -185,7 +166,7 @@ pub fn parse_args<'a>() -> (u64, ArgMatches<'a>) {
         .setting(AppSettings::ColorAuto)
         .setting(AppSettings::StrictUtf8)
         .setting(AppSettings::SubcommandRequiredElseHelp)
-        .get_matches();
-
-    (matches.occurrences_of("VERBOSITY"), matches)
+        .get_matches_safe()
+        .and_then(|matches| Ok((matches.occurrences_of("VERBOSITY"), matches)))
+        .or_else(|e| Err(ErrorKind::Clap(e).into()))
 }

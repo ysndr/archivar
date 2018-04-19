@@ -117,6 +117,7 @@ impl Command {
 
                 Ok(actions)
             }
+
             Command::New {
                 path,
                 dir,
@@ -124,12 +125,12 @@ impl Command {
                 template_args,
                 no_commit,
             } => {
-                info!(logger, "her am i");
+                debug!(logger, "creating actions for command::new");
                 if !path.is_relative() {
                     return Err(ErrorKind::InvalidCommandArgs(
                         "path".to_owned(),
                         path.to_str().unwrap().to_owned(),
-                        "is not relative".to_owned(),
+                        "expected relative path".to_owned(),
                     ).into());
                 }
 
@@ -137,7 +138,7 @@ impl Command {
                     return Err(ErrorKind::InvalidCommandArgs(
                         "ARCHIVAR_ROOT (dir)".to_owned(),
                         path.to_str().unwrap().to_owned(),
-                        "no Archivar found".to_owned(),
+                        "failed to find Archivar managed directory".to_owned(),
                     ).into());
                 }
 
@@ -154,10 +155,9 @@ impl Command {
                 let mut parents = vec![abs_path.parent().unwrap()];
                 while parents.last().unwrap() != dir {
                     let last = *parents.last().unwrap();
-                    debug!(
+                    trace!(
                         logger,
-                        "adding parent '{}'",
-                        last.parent().unwrap().display()
+                        "adding parent dir to search for project"; "directory" =>  %last.parent().unwrap().display()
                     );
                     parents.push(last.parent().unwrap());
                 }
@@ -190,16 +190,23 @@ impl Command {
                     ).into());
                 }
 
-                // TODO: implement templating
-
                 // TODO: implement git
                 actions.push(Action::Touch {
                     path: abs_path.to_owned(),
                     mkparents: true,
                 });
 
+                // TODO: implement templating
+                if let Some(template_path) = template {
+                    actions.push(Template::make(
+                        template_path.to_owned(),
+                        abs_path.to_owned(),
+                    ))
+                }
+
                 Ok(actions)
             }
+
             Command::Archive {
                 dir,
                 path,
