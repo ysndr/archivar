@@ -1,6 +1,7 @@
 use action::{Action, Actionable};
 use error::*;
 use slog::Logger;
+use std::collections::BTreeMap;
 use std::io;
 use std::path::Path;
 
@@ -23,4 +24,16 @@ impl Actionable for Template {
     fn commit(&self, logger: &Logger) -> io::Result<()> {
         Ok(())
     }
+}
+
+struct TemplateConfig<'a> {
+    init: Option<Vec<String>>,
+    paths: Option<Vec<&'a Path>>,
+    include: Option<BTreeMap<&'a Path, Option<IncludeOptions<'a>>>>,
+}
+
+struct IncludeOptions<'a> {
+    dest: Option<&'a Path>,
+    extract: Option<bool>,
+    gitignore: Option<bool>,
 }
