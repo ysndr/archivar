@@ -5,6 +5,10 @@ extern crate slog_term;
 
 extern crate sloggers;
 
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_yaml;
 #[macro_use]
 extern crate clap;
 
