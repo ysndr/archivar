@@ -11,11 +11,13 @@ error_chain! {
             display("invalid command ({}) issued", command)
         }
 
+
     }
 
     foreign_links {
         Clap(::clap::Error);
         Io(::std::io::Error);
+        SerdeYaml(::serde_yaml::Error);
     }
 
 }

@@ -3,10 +3,6 @@ extern crate slog;
 extern crate slog_async;
 extern crate slog_term;
 
-extern crate sloggers;
-
-extern crate subprocess;
-
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -33,17 +29,6 @@ use error::*;
 use logger::Logger;
 
 fn main() {
-    use subprocess::Exec;
-    println!(
-        "{}",
-        String::from_utf8(
-            Exec::shell("echo world && echo \"hello\"")
-                .capture()
-                .expect("whoouops")
-                .stdout
-        ).unwrap()
-    );
-
     if let Err(e) = run() {
         match *e.kind() {
             ErrorKind::Clap(_) => crit!(Logger::default(), "{}", e),
