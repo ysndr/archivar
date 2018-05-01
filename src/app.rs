@@ -1,4 +1,5 @@
 use action::Actionable;
+use cargo::core::shell::{ColorChoice, Shell, Verbosity};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use action::Action;
@@ -8,12 +9,19 @@ use logger::Logger;
 
 #[derive(Debug)]
 pub struct Config<'a> {
-    log: &'a Logger,
+    pub log: &'a Logger,
+    pub shell: &'a Shell,
+
+    pub git: bool,
 }
 
 impl<'a> Config<'a> {
-    pub fn new(log: &'a Logger) -> Self {
-        Self { log }
+    pub fn new(log: &'a Logger, shell: &'a Shell) -> Self {
+        Self {
+            log,
+            shell,
+            git: false,
+        }
     }
 }
 
@@ -34,7 +42,7 @@ impl<'a> Archivar<'a> {
     }
 
     pub fn make_actions(&mut self) -> Result<()> {
-        let result = self.command.to_actions(self.config.log);
+        let result = self.command.to_actions(&self.config);
 
         match result {
             Ok(actions) => {

@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Yannik Sander <me@ysndr.de>"]
 
 [dependencies]
+cargo = "0.26.0"
 clap = "2.26.0"
 slog = { version = "2.2.3",  features = ["max_level_trace"] }
 slog-term = "2.3.0"

@@ -25,7 +25,7 @@ impl Template {
 
         debug!(logger, "read config from file";
                "file" => %template_path.display(),
-               "config" => ?config);
+               "config" => format!("{:#?}", config));
 
         Ok(Template {
             actions: Vec::new(),

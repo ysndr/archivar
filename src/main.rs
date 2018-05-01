@@ -3,6 +3,8 @@ extern crate slog;
 extern crate slog_async;
 extern crate slog_term;
 
+extern crate cargo;
+
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -24,6 +26,7 @@ mod template;
 
 use app::Archivar as App;
 use app::Config;
+use cargo::core::shell::Shell;
 use command::Command;
 use error::*;
 use logger::Logger;
@@ -52,10 +55,11 @@ fn run() -> Result<()> {
     let (log_level, matches) = app::parse_args()?;
 
     let log = Logger::new(log_level);
+    let shell = Shell::new();
     let command = Command::from_matches(&matches, &log)?;
 
     println!("got command {:?}", command);
-    let config = Config::new(&log);
+    let config = Config::new(&log, &shell);
 
     let mut app = App::new(config, command);
 
