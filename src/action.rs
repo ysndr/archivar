@@ -5,6 +5,7 @@ use std::io;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
+use app;
 use command::Command;
 use constants::*;
 use error::*;
@@ -19,19 +20,20 @@ pub enum Action {
     Chmod { target: PathBuf, mode: u32 },
     Message(String),
     Git(GitAction),
+    Shell(String),
     Noop,
 }
 
 pub trait Actionable: Debug {
-    fn commit(&self, logger: &slog::Logger) -> io::Result<()>;
+    fn commit(&self, logger: &slog::Logger) -> Result<()>;
 }
 
 impl Actionable for Action {
-    fn commit(&self, logger: &slog::Logger) -> io::Result<()> {
+    fn commit(&self, logger: &slog::Logger) -> Result<()> {
         match self {
             Action::Mkdir { path } => {
                 info!(logger, "mkdir {}", path.display());
-                fs::create_dir_all(&path)
+                fs::create_dir_all(&path)?;
             }
             Action::Touch { path, mkparents } => {
                 info!(logger, "touch file {}", path.display());
@@ -43,16 +45,15 @@ impl Actionable for Action {
                 }.and_then(|_| {
                     debug!(logger, "writing file to fs");
                     fs::OpenOptions::new().create(true).write(true).open(&path)
-                })
-                    .and(Ok(()))
+                })?;
             }
             Action::Move { from, to } => {
                 info!(logger, "move '{}' -> '{}'", from.display(), to.display());
-                fs::rename(&from, &to)
+                fs::rename(&from, &to)?;
             }
             Action::Copy { from, to } => {
                 info!(logger, "copy '{}' -> '{}'", from.display(), to.display());
-                fs::copy(&from, &to).and(Ok(()))
+                fs::copy(&from, &to)?;
             }
             Action::Chmod { target, mode } => {
                 info!(
@@ -64,19 +65,24 @@ impl Actionable for Action {
                 target
                     .metadata()
                     .and_then(|meta| Ok(meta.permissions()))
-                    .and_then(|mut perms| Ok(perms.set_mode(*mode)))
+                    .and_then(|mut perms| Ok(perms.set_mode(*mode)))?
             }
             Action::Message(msg) => {
                 info!(logger, "{}", msg);
-                Ok(())
             }
-            _ => Ok(()),
+            Action::Shell(command) => {
+                // info!(logger, "execute.."; "command" => ?command);
+
+            }
+            _ => {}
         }
+        Ok(())
+        // if we got here nothing failed
     }
 }
 
 impl Actionable for Vec<Action> {
-    fn commit(&self, logger: &slog::Logger) -> io::Result<()> {
+    fn commit(&self, logger: &slog::Logger) -> Result<()> {
         for action in self.iter() {}
         Ok(())
     }
@@ -86,7 +92,10 @@ impl Actionable for Vec<Action> {
 struct GitAction;
 
 impl Command {
-    pub fn to_actions(&self, logger: &slog::Logger) -> Result<Vec<Box<Actionable>>> {
+    pub fn to_actions(&self, config: &app::Config) -> Result<Vec<Box<Actionable>>> {
+        let logger = config.log;
+        let shell = config.shell;
+
         let mut actions: Vec<Box<Actionable>> = Vec::new();
         match self {
             Command::Init { path, with_git } => {
