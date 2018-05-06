@@ -20,7 +20,7 @@ pub enum Action {
     Chmod { target: PathBuf, mode: u32 },
     Message(String),
     Git(GitAction),
-    Shell(String),
+    Shell(String, PathBuf),
     Noop,
 }
 
@@ -70,9 +70,15 @@ impl Actionable for Action {
             Action::Message(msg) => {
                 info!(logger, "{}", msg);
             }
-            Action::Shell(command) => {
+            Action::Shell(command, cwd) => {
                 // info!(logger, "execute.."; "command" => ?command);
 
+                debug!(
+                    logger,
+                    "executing command {} from {}",
+                    command,
+                    cwd.display()
+                )
             }
             _ => {}
         }

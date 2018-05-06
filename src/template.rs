@@ -23,6 +23,19 @@ impl Template {
 
         let config = TemplateConfig::from_file(&template_path)?;
 
+        let mut actions = Vec::new();
+        let init_command_actions =
+            make_init_command_actions(config.init.as_ref().unwrap_or(&vec![]), project_path);
+        let mkpath_actions =
+            make_mkpath_actions(config.paths.as_ref().unwrap_or(&vec![]), project_path);
+        let include_actions = make_include_actions(
+            config.include.as_ref().unwrap_or(&BTreeMap::new()),
+            project_path,
+        );
+        actions.push(init_command_actions);
+        actions.push(mkpath_actions);
+        actions.push(include_actions);
+
         debug!(logger, "read config from file";
                "file" => %template_path.display(),
                "config" => format!("{:#?}", config));
@@ -31,6 +44,29 @@ impl Template {
             actions: Vec::new(),
         })
     }
+}
+
+fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action> {
+    let mut actions = vec![];
+    for action_str in init_lines.iter() {
+        actions.push(Action::Shell(action_str.to_string(), cwd.to_path_buf()));
+    }
+    actions
+}
+
+fn make_mkpath_actions(includes: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
+    vec![]
+}
+
+fn make_include_actions(
+    includes: &BTreeMap<PathBuf, Option<IncludeOptions>>,
+    cwd: &Path,
+) -> Vec<Action> {
+    let mut actions = vec![];
+
+    for (path, options) in includes.iter() {}
+
+    actions
 }
 
 #[test]
