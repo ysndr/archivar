@@ -1,5 +1,5 @@
 use action::{Action, Actionable};
-use constants::TEMPLATE_FILE_NAME;
+use constants::{GITKEEP_FILE_NAME, TEMPLATE_FILE_NAME};
 use error::*;
 use serde_yaml;
 use slog::Logger;
@@ -19,19 +19,24 @@ impl Template {
     pub fn make(template_path: &Path, project_path: &Path, logger: &Logger) -> Result<Self> {
         debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
 
-        let template_path = template_path.join(TEMPLATE_FILE_NAME);
+        let template_file = template_path.join(TEMPLATE_FILE_NAME);
 
-        let config = TemplateConfig::from_file(&template_path)?;
+        let config = TemplateConfig::from_file(&template_file)?;
 
         let mut actions = Vec::new();
+
         let init_command_actions =
             make_init_command_actions(config.init.as_ref().unwrap_or(&vec![]), project_path);
+
         let mkpath_actions =
             make_mkpath_actions(config.paths.as_ref().unwrap_or(&vec![]), project_path);
+
         let include_actions = make_include_actions(
             config.include.as_ref().unwrap_or(&BTreeMap::new()),
+            template_path,
             project_path,
         );
+
         actions.push(init_command_actions);
         actions.push(mkpath_actions);
         actions.push(include_actions);
@@ -54,17 +59,43 @@ fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action
     actions
 }
 
-fn make_mkpath_actions(includes: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
-    vec![]
+fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
+    let mut actions = vec![];
+
+    for path in paths.iter().filter(|p| p.is_relative()) {
+        let mut path = cwd.join(path);
+        path.push(GITKEEP_FILE_NAME);
+        actions.push(Action::Touch {
+            path,
+            mkparents: true,
+        });
+    }
+
+    actions
 }
 
 fn make_include_actions(
     includes: &BTreeMap<PathBuf, Option<IncludeOptions>>,
+    template_dir: &Path,
     cwd: &Path,
 ) -> Vec<Action> {
     let mut actions = vec![];
 
-    for (path, options) in includes.iter() {}
+    for (path, options) in includes {
+        // determine source file/folder
+        let from = if path.is_relative() {
+            template_dir.join(path)
+        } else {
+            path.to_owned()
+        };
+
+        let to = match options {
+            Some(o) if o.dest.is_some() => cwd.join(o.dest.to_owned().unwrap()),
+            _ => cwd.join(Path::new(path.file_name().unwrap())),
+        };
+
+        actions.push(Action::Copy { from, to });
+    }
 
     actions
 }
