@@ -25,29 +25,27 @@ impl Template {
 
         let mut actions = Vec::new();
 
-        let init_command_actions =
+        let mut init_command_actions =
             make_init_command_actions(config.init.as_ref().unwrap_or(&vec![]), project_path);
 
-        let mkpath_actions =
+        let mut mkpath_actions =
             make_mkpath_actions(config.paths.as_ref().unwrap_or(&vec![]), project_path);
 
-        let include_actions = make_include_actions(
+        let mut include_actions = make_include_actions(
             config.include.as_ref().unwrap_or(&BTreeMap::new()),
             template_path,
             project_path,
         );
 
-        actions.push(init_command_actions);
-        actions.push(mkpath_actions);
-        actions.push(include_actions);
+        actions.append(&mut init_command_actions);
+        actions.append(&mut mkpath_actions);
+        actions.append(&mut include_actions);
 
         debug!(logger, "read config from file";
                "file" => %template_path.display(),
                "config" => format!("{:#?}", config));
 
-        Ok(Template {
-            actions: Vec::new(),
-        })
+        Ok(Template { actions })
     }
 }
 
@@ -64,11 +62,8 @@ fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
 
     for path in paths.iter().filter(|p| p.is_relative()) {
         let mut path = cwd.join(path);
-        path.push(GITKEEP_FILE_NAME);
-        actions.push(Action::Touch {
-            path,
-            mkparents: true,
-        });
+        // path.push(GITKEEP_FILE_NAME);
+        actions.push(Action::Mkdir { path });
     }
 
     actions
@@ -100,35 +95,6 @@ fn make_include_actions(
     actions
 }
 
-#[test]
-fn reader_test() {
-    use logger;
-    let template = Template::make(
-        &Path::new("./example"),
-        &Path::new("example"),
-        &logger::Logger::new(2),
-    );
-
-    println!("template: {:#?}", template);
-}
-
-#[test]
-fn exec_test() {
-    use std::process::Command;
-    let shell = "bash";
-    let cmd = "echo hello && echo world";
-
-    println!(
-        "{:?}",
-        Command::new(shell)
-            .arg("-c")
-            .arg("--")
-            .arg(cmd)
-            .output()
-            .unwrap()
-    );
-}
-
 impl Actionable for Template {
     fn commit(&self, logger: &Logger) -> Result<()> {
         debug!(logger, "commiting actions"; "n" => self.actions.len());
@@ -158,4 +124,63 @@ struct IncludeOptions {
     dest: Option<PathBuf>,
     extract: Option<bool>,
     gitignore: Option<bool>,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    // #[test]
+    // fn reader_test() {
+    //     use logger;
+    //     let template = Template::make(
+    //         &Path::new("./example"),
+    //         &Path::new("example"),
+    //         &logger::Logger::new(2),
+    //     );
+    //
+    //     println!("template: {:#?}", template);
+    // }
+    //
+    // #[test]
+    // fn exec_test() {
+    //     use std::process::Command;
+    //     let shell = "bash";
+    //     let cmd = "echo hello && echo world";
+    //
+    //     println!(
+    //         "{:?}",
+    //         Command::new(shell)
+    //             .arg("-c")
+    //             .arg("--")
+    //             .arg(cmd)
+    //             .output()
+    //             .unwrap()
+    //     );
+    // }
+
+    #[test]
+    fn read_from_file() {
+        let config = TemplateConfig::from_file(&Path::new("test/.template.yaml")).unwrap();
+
+        assert_eq!(config.include.unwrap().len(), 6);
+        assert_eq!(config.init.unwrap().len(), 2);
+        assert_eq!(config.paths.unwrap().len(), 3);
+    }
+
+    #[test]
+    fn creates_actions() {
+        use logger;
+
+        let now = ::std::time::SystemTime::now();
+        let mut temp_dir = ::std::env::temp_dir();
+        temp_dir.push("archivar-test");
+
+        let template = Template::make(&Path::new("test"), &temp_dir, &logger::Logger::new(2));
+
+        println!("{:#?}", template);
+
+        ::std::fs::remove_dir_all(&temp_dir);
+    }
+
 }
