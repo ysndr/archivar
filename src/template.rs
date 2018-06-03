@@ -127,7 +127,7 @@ struct IncludeOptions {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     // #[test]
@@ -181,6 +181,26 @@ mod test {
         println!("{:#?}", template);
 
         ::std::fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn makes_paths() {
+        let paths = vec![
+            PathBuf::new("src/"),
+            PathBuf::new("nested/deeply/wow/so/deep"),
+        ];
+
+        let cwd = &Path::new("/tmp/ARCHIVAR");
+        let actions = Path::make_mkpath_actions(paths, cwd);
+
+        assert_eq!(actions.len(), 2);
+        assert_eq!(
+            actions.iter.fold(0, |sum, action| sum + match action {
+                Action::Mkdir => 1,
+                _ => 0,
+            }),
+            2
+        )
     }
 
 }
