@@ -1,5 +1,5 @@
 use action::Actionable;
-use cargo::core::shell::{ColorChoice, Shell, Verbosity};
+use shell::{ColorChoice, Shell, Verbosity};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use action::Action;

@@ -26,7 +26,7 @@ mod template;
 
 use app::Archivar as App;
 use app::Config;
-use cargo::core::shell::Shell;
+use shell::Shell;
 use command::Command;
 use error::*;
 use logger::Logger;

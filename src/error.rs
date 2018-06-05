@@ -15,6 +15,7 @@ error_chain! {
     }
 
     foreign_links {
+        Shell(::shell::errors::Error);
         Clap(::clap::Error);
         Io(::std::io::Error);
         SerdeYaml(::serde_yaml::Error);
