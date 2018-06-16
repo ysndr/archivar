@@ -10,7 +10,7 @@ slog-term = "2.3.0"
 slog-async = "2.3.0"
 sloggers = "0.2.6"
 error-chain = "0.11.0"
-shell = { git = "https://github.com/ysndr/shell-rs", branch = "master" }
+shell = { path = "/home/ysander/Documents/projects/rust/shell" }
 serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.7"
