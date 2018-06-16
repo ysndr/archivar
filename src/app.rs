@@ -1,6 +1,7 @@
 use action::Actionable;
-use shell::{ColorChoice, Shell, Verbosity};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use shell::{ColorChoice, Shell, Verbosity};
+use std::path::Path;
 
 use action::Action;
 use command::Command;
@@ -11,15 +12,17 @@ use logger::Logger;
 pub struct Config<'a> {
     pub log: &'a Logger,
     pub shell: &'a Shell,
+    pub cwd: &'a Path,
 
     pub git: bool,
 }
 
 impl<'a> Config<'a> {
-    pub fn new(log: &'a Logger, shell: &'a Shell) -> Self {
+    pub fn new(log: &'a Logger, shell: &'a Shell, cwd: &'a Path) -> Self {
         Self {
             log,
             shell,
+            cwd,
             git: false,
         }
     }

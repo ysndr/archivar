@@ -26,10 +26,10 @@ mod template;
 
 use app::Archivar as App;
 use app::Config;
-use shell::Shell;
 use command::Command;
 use error::*;
 use logger::Logger;
+use shell::Shell;
 
 fn main() {
     if let Err(e) = run() {
@@ -59,7 +59,8 @@ fn run() -> Result<()> {
     let command = Command::from_matches(&matches, &log)?;
 
     println!("got command {:?}", command);
-    let config = Config::new(&log, &shell);
+    let cwd = std::env::current_dir().unwrap();
+    let config = Config::new(&log, &shell, cwd.as_path());
 
     let mut app = App::new(config, command);
 
