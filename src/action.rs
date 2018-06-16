@@ -94,6 +94,24 @@ impl Actionable for Vec<Action> {
     }
 }
 
+
+pub trait ActionSet<'a> {
+    fn get_actionables(&'a self) -> Box<Iterator<Item = &Box<Actionable>> + 'a>;
+    fn run(&'a self, logger: &slog::Logger) -> Result<()> {
+        for action in self.get_actionables() {
+           action.commit(logger)?
+        }
+        Ok(()) 
+    }
+}
+
+impl<'a> ActionSet<'a> for Vec<Box<Actionable>> {
+    fn get_actionables(&'a self) -> Box<Iterator<Item = &Box<Actionable>> + 'a> {
+        Box::new(self.iter())
+    }
+
+}
+
 #[derive(Debug)]
 struct GitAction;
 

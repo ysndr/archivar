@@ -1,4 +1,4 @@
-use action::{Action, Actionable};
+use action::{Action, ActionSet, Actionable};
 use constants::{GITKEEP_FILE_NAME, TEMPLATE_FILE_NAME};
 use error::*;
 use serde_yaml;
@@ -10,7 +10,7 @@ use std::{fs, io};
 
 #[derive(Debug)]
 pub struct Template {
-    actions: Vec<Action>,
+    actions: Vec<Box<Actionable>>,
     // TODO:
     // arguments: ???
 }
@@ -49,21 +49,31 @@ impl Template {
     }
 }
 
-fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action> {
-    let mut actions = vec![];
+impl<'a> ActionSet<'a> for Template {
+    fn get_actionables(&'a self) -> Box<Iterator<Item = &Box<Actionable>> + 'a> {
+        Box::new(self.actions.iter())
+    }
+}
+
+fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Box<Actionable>> {
+    let mut actions: Vec<Box<Actionable>> = vec![];
+
     for action_str in init_lines.iter() {
-        actions.push(Action::Shell(action_str.to_string(), cwd.to_path_buf()));
+        actions.push(Box::new(Action::Shell(
+            action_str.to_string(),
+            cwd.to_path_buf(),
+        )));
     }
     actions
 }
 
-fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
-    let mut actions = vec![];
+fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Box<Actionable>> {
+    let mut actions: Vec<Box<Actionable>> = vec![];
 
     for path in paths.iter().filter(|p| p.is_relative()) {
         let mut path = cwd.join(path);
         // path.push(GITKEEP_FILE_NAME);
-        actions.push(Action::Mkdir { path });
+        actions.push(Box::new(Action::Mkdir { path }));
     }
 
     actions
@@ -73,8 +83,8 @@ fn make_include_actions(
     includes: &BTreeMap<PathBuf, Option<IncludeOptions>>,
     template_dir: &Path,
     cwd: &Path,
-) -> Vec<Action> {
-    let mut actions = vec![];
+) -> Vec<Box<Actionable>> {
+    let mut actions: Vec<Box<Actionable>> = vec![];
 
     for (path, options) in includes {
         // determine source file/folder
@@ -89,7 +99,7 @@ fn make_include_actions(
             _ => cwd.join(Path::new(path.file_name().unwrap())),
         };
 
-        actions.push(Action::Copy { from, to });
+        actions.push(Box::new(Action::Copy { from, to }));
     }
 
     actions

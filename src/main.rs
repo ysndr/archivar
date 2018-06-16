@@ -25,6 +25,7 @@ mod logger;
 mod template;
 
 use app::Archivar as App;
+use action::ActionSet;
 use app::Config;
 use command::Command;
 use error::*;
@@ -62,7 +63,9 @@ fn run() -> Result<()> {
     let cwd = std::env::current_dir().unwrap();
     let config = Config::new(&log, &shell, cwd.as_path());
 
-    let mut app = App::new(config, command);
+    let app = App::new(config);
+    let actions = app.make_actions(&command)?;
 
-    app.make_actions()
+    app.execute(&*actions)
+
 }

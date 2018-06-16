@@ -3,7 +3,7 @@ use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use shell::{ColorChoice, Shell, Verbosity};
 use std::path::Path;
 
-use action::Action;
+use action::ActionSet;
 use command::Command;
 use error::*;
 use logger::Logger;
@@ -31,31 +31,31 @@ impl<'a> Config<'a> {
 #[derive(Debug)]
 pub struct Archivar<'a> {
     config: Config<'a>,
-    command: Command,
-    actions: Option<Vec<Box<Actionable>>>,
 }
 
 impl<'a> Archivar<'a> {
-    pub fn new(config: Config<'a>, command: Command) -> Self {
+    pub fn new(config: Config<'a>) -> Self {
         Self {
             config,
-            command,
-            actions: None,
         }
     }
 
-    pub fn make_actions(&mut self) -> Result<()> {
-        let result = self.command.to_actions(&self.config);
+    pub fn make_actions(&self, command: &Command) -> Result<Box<ActionSet>> {
+        let result = command.to_actions(&self.config);
 
         match result {
             Ok(actions) => {
-                self.actions = Some(actions);
-                debug!(self.config.log, "`make_actions` was ok"; "actions" => ?self.actions);
-                Ok(())
+                debug!(self.config.log, "`make_actions` was ok"; "actions" => ?actions);
+                Ok(Box::new(actions))
             }
             Err(e) => bail!(e),
         }
     }
+
+    pub fn execute(&self, actions: &ActionSet) -> Result<()> {
+        unimplemented!()
+    }
+
     fn handle_error(&self, e: Error) {}
 }
 
