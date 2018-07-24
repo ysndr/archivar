@@ -140,35 +140,6 @@ struct IncludeOptions {
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn reader_test() {
-    //     use logger;
-    //     let template = Template::make(
-    //         &Path::new("./example"),
-    //         &Path::new("example"),
-    //         &logger::Logger::new(2),
-    //     );
-    //
-    //     println!("template: {:#?}", template);
-    // }
-    //
-    // #[test]
-    // fn exec_test() {
-    //     use std::process::Command;
-    //     let shell = "bash";
-    //     let cmd = "echo hello && echo world";
-    //
-    //     println!(
-    //         "{:?}",
-    //         Command::new(shell)
-    //             .arg("-c")
-    //             .arg("--")
-    //             .arg(cmd)
-    //             .output()
-    //             .unwrap()
-    //     );
-    // }
-
     #[test]
     fn read_from_file() {
         let config = TemplateConfig::from_file(&Path::new("test/.template.yaml")).unwrap();
@@ -190,7 +161,7 @@ mod tests {
 
         println!("{:#?}", template);
 
-        ::std::fs::remove_dir_all(&temp_dir);
+        let _ = ::std::fs::remove_dir_all(&temp_dir);
     }
 
     #[test]
@@ -204,13 +175,6 @@ mod tests {
         let actions = make_mkpath_actions(&paths, cwd);
 
         assert_eq!(actions.len(), 2);
-        assert_eq!(
-            actions.iter().fold(0, |sum, action| sum + match action {
-                Action::Mkdir { path: _ } => 1,
-                _ => 0,
-            }),
-            2
-        )
     }
 
 }
