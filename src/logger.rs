@@ -1,53 +1,31 @@
-use slog;
-use slog::*;
+use fern;
+use log;
+use chrono;
 
-use slog_async;
-use slog_term;
-use std::io;
-use std::ops::Deref;
-
-fn eat_timestamp(writer: &mut io::Write) -> io::Result<()> {
-    write!(writer, "::")
+pub fn setup_logger(level: log::LevelFilter) -> Result<(), fern::InitError> {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(level)
+        .chain(::std::io::stdout())
+        .apply()?;
+    Ok(())
 }
 
-#[derive(Debug)]
-pub struct Logger {
-    logger: slog::Logger,
-}
-
-impl Logger {
-    pub fn new(verbosity: u64) -> Self {
-        let decorator = slog_term::TermDecorator::new().build();
-        let drain = slog_term::CompactFormat::new(decorator)
-            .use_custom_timestamp(eat_timestamp)
-            .build()
-            .fuse();
-        let level = match verbosity {
-            0 => Level::Warning,
-            1 => Level::Info,
-            2 => Level::Debug,
-            _ => Level::Trace,
-        };
-
-        let drain = slog::LevelFilter::new(drain, level).ignore_res();
-        let drain = slog_async::Async::new(drain).build().fuse();
-        let logger = slog::Logger::root(drain, o!());
-        debug!(&logger, "logger ready");
-
-        Logger { logger }
-    }
-}
-
-impl Default for Logger {
-    fn default() -> Self {
-        Logger::new(0)
-    }
-}
-
-impl Deref for Logger {
-    type Target = slog::Logger;
-
-    fn deref(&self) -> &slog::Logger {
-        &self.logger
+pub fn level_from_verbosity(verbosity: usize) -> log::LevelFilter {
+    match verbosity {
+        0 => log::LevelFilter::Error,
+        1 => log::LevelFilter::Warn,
+        2 => log::LevelFilter::Info,
+        3 => log::LevelFilter::Debug,
+        4 => log::LevelFilter::Trace,
+        _ => log::LevelFilter::max(),
     }
 }
