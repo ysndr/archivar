@@ -18,13 +18,14 @@ extern crate error_chain;
 
 // mod action;
 mod app;
+mod args;
 mod constants;
 mod error;
 mod logger;
 // mod template;
 
 use app::Archivar as App;
-use app::Args;
+use args::Args;
 use error::*;
 use structopt::StructOpt;
 
