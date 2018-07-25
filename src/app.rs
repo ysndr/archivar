@@ -4,9 +4,8 @@ use std::cell::{RefCell, RefMut};
 use std::env;
 use std::path::PathBuf;
 
-use args::{Args,Command};
+use args::{Args, Command};
 use error::*;
-
 
 #[derive(Debug)]
 pub struct Context {
@@ -28,7 +27,6 @@ pub struct Archivar {
 
 impl Archivar {
     pub fn new(args: Args) -> Self {
-        
         let mut shell = Shell::new();
         shell.set_verbosity(match args.verbosity {
             1 => Verbosity::Normal,
@@ -52,4 +50,25 @@ impl Archivar {
     pub fn shell(&self) -> RefMut<Shell> {
         self.context.shell()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn args_to_app() {
+       
+        let args = Args {
+            verbosity: 0,
+            git_disabled: false,
+            path: PathBuf::from("."),
+            sub: Command::Init,
+        };
+
+        let app = Archivar::new(args);
+        
+        assert_eq!(app.command, Command::Init);
+        assert_eq!(app.context.path, PathBuf::from("."))
+    }
+
 }

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, PartialEq)]
 pub enum Command {
     #[structopt(name = "init")]
     Init,
