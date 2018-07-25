@@ -5,6 +5,7 @@ use std::env;
 use std::path::PathBuf;
 
 use args::{Args, Command};
+use action::Action;
 use error::*;
 
 #[derive(Debug)]
@@ -19,6 +20,7 @@ impl Context {
         self.shell.borrow_mut()
     }
 }
+
 #[derive(Debug)]
 pub struct Archivar {
     command: Command,
