@@ -1,5 +1,5 @@
 // use action::Actionable;
-use shell::{ColorChoice, Shell, Verbosity};
+use shell::{Shell, Verbosity};
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::path::PathBuf;
@@ -36,7 +36,7 @@ pub enum Command {
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "archivar", about = "the trachkeeper of your stuff")]
-pub struct Opt {
+pub struct Args {
     #[structopt(
         short = "v",
         long = "verbosity",
@@ -79,11 +79,10 @@ pub struct Archivar {
 }
 
 impl Archivar {
-    pub fn new() -> Self {
-        let opt = Opt::from_args();
-
+    pub fn new(args: Args) -> Self {
+        
         let mut shell = Shell::new();
-        shell.set_verbosity(match opt.verbosity {
+        shell.set_verbosity(match args.verbosity {
             1 => Verbosity::Normal,
             _ => Verbosity::Verbose,
         });
@@ -92,12 +91,12 @@ impl Archivar {
 
         let context = Context {
             cwd,
-            path: opt.path,
+            path: args.path,
             shell: RefCell::new(shell),
         };
 
         Archivar {
-            command: opt.sub,
+            command: args.sub,
             context,
         }
     }

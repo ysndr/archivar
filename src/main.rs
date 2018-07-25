@@ -24,10 +24,14 @@ mod logger;
 // mod template;
 
 use app::Archivar as App;
+use app::Args;
 use error::*;
+use structopt::StructOpt;
 
 fn main() {
-    let app = App::new();
+    let args = Args::from_args();
+
+    let app = App::new(args);
 
     if let Err(e) = run(&app) {
         let mut mapp = app;
@@ -38,7 +42,7 @@ fn main() {
 fn run(app: &App) -> Result<()> {
     app.shell().info(format!("{:?}", app)).unwrap();
 
-    return Err("oof".into());
+    Err("oof".into())
 
     // let actions = app.make_actions();
 
