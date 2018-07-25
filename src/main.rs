@@ -1,7 +1,8 @@
 #[macro_use]
-extern crate slog;
-extern crate slog_async;
-extern crate slog_term;
+extern crate log;
+extern crate fern;
+
+extern crate chrono;
 
 extern crate shell;
 
@@ -31,6 +32,9 @@ use structopt::StructOpt;
 
 fn main() {
     let args = Args::from_args();
+
+    let level = logger::level_from_verbosity(args.verbosity);
+    logger::setup_logger(level).expect("could not set logger");
 
     let app = App::new(args);
 
