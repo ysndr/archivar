@@ -6,7 +6,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 use app;
-use command::Command;
+use app::Command;
 use constants::*;
 use error::*;
 use template::Template;
