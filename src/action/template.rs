@@ -7,16 +7,18 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::{fs, io};
 
+use app;
 
-use super::OS;
 use super::Message;
+use super::OS;
 
-struct Template {
-    actions: Action
+#[derive(Debug, PartialEq)]
+pub struct Template {
+    actions: Box<Action>,
 }
 
 impl Template {
-    pub fn make(template_path: &Path, project_path: &Path, logger: &Logger) -> Result<Self> {
+    pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
         // debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
 
         let template_file = template_path.join(TEMPLATE_FILE_NAME);
@@ -45,16 +47,17 @@ impl Template {
         //        "file" => %template_path.display(),
         //        "config" => format!("{:#?}", config));
 
-        Ok(Template { actions })
+        Ok(Template {
+            actions: box Action::Group(actions),
+        })
     }
 }
-
 
 fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action> {
     let mut actions: Vec<Action> = vec![];
 
     for action_str in init_lines.iter() {
-        actions.push(Box::new(Action::Shell(
+        actions.push(Action::OS(OS::Shell(
             action_str.to_string(),
             cwd.to_path_buf(),
         )));
@@ -68,7 +71,7 @@ fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
     for path in paths.iter().filter(|p| p.is_relative()) {
         let mut path = cwd.join(path);
         // path.push(GITKEEP_FILE_NAME);
-        actions.push(Box::new(Action::Mkdir { path }));
+        actions.push(Action::OS(OS::Mkdir { path }));
     }
 
     actions
@@ -94,14 +97,14 @@ fn make_include_actions(
             _ => cwd.join(Path::new(path.file_name().unwrap())),
         };
 
-        actions.push(Action::OS());
+        actions.push(Action::OS(OS::Copy { from, to }));
     }
 
     actions
 }
 
 impl ActionTrait for Template {
-    fn run<'a>(&self,context: &'a app::Context) -> Result<()> {
+    fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
         Ok(())
     }
 }
@@ -144,13 +147,11 @@ mod tests {
 
     #[test]
     fn creates_actions() {
-        use logger;
-
         let now = ::std::time::SystemTime::now();
         let mut temp_dir = ::std::env::temp_dir();
         temp_dir.push("archivar-test");
 
-        let template = Template::make(&Path::new("test"), &temp_dir, &logger::Logger::new(2));
+        let template = Template::make(&Path::new("test"), &temp_dir);
 
         println!("{:#?}", template);
 

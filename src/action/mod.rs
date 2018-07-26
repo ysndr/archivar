@@ -1,30 +1,19 @@
-use std::any::Any;
-use log;
-use std::fmt::Debug;
-use std::io;
-use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
-
 use app;
 use args::Command;
 use constants::*;
 use error::*;
 // use template::Template;
 
-mod os;
 mod message;
+mod os;
 mod template;
 
-
-use self::os::Action as OS;
 use self::message::Action as Message;
+use self::os::Action as OS;
 
-pub trait ActionTrait: {
-    fn run<'a>(&self,context: &'a app::Context) -> Result<()>;
+pub trait ActionTrait {
+    fn run<'a>(&self, context: &'a app::Context) -> Result<()>;
 }
-
-
-
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -32,6 +21,7 @@ pub enum Action {
     // Git(GitAction),
     Message(Message),
     Group(Vec<Action>),
+    Template(template::Template),
     Noop,
 }
 
@@ -40,9 +30,6 @@ impl ActionTrait for Action {
         Ok(())
     }
 }
-
-
-
 
 // impl Action for ActionSet {
 //     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
@@ -57,22 +44,19 @@ impl ActionTrait for Action {
 //     }
 // }
 
-
-
-
 impl From<Command> for Action {
     fn from(command: Command) -> Action {
         let actions: Vec<Action> = match command {
             Command::Init => vec![
                 Action::Noop,
-                Action::Message(Message::Info("hello".to_owned()))],
-            _ => vec![]
+                Action::Message(Message::Info("hello".to_owned())),
+            ],
+            _ => vec![],
         };
 
         Action::Group(actions)
-    } 
+    }
 }
-
 
 #[cfg(test)]
 mod tests {
