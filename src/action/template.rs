@@ -1,23 +1,23 @@
-use action::{Action, ActionSet, Actionable};
+use action::{Action, ActionTrait};
 use constants::{GITKEEP_FILE_NAME, TEMPLATE_FILE_NAME};
 use error::*;
 use serde_yaml;
-use slog::Logger;
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 use std::{fs, io};
 
-#[derive(Debug)]
-pub struct Template {
-    actions: Vec<Box<Actionable>>,
-    // TODO:
-    // arguments: ???
+
+use super::OS;
+use super::Message;
+
+struct Template {
+    actions: Action
 }
 
 impl Template {
     pub fn make(template_path: &Path, project_path: &Path, logger: &Logger) -> Result<Self> {
-        debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
+        // debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
 
         let template_file = template_path.join(TEMPLATE_FILE_NAME);
 
@@ -41,22 +41,17 @@ impl Template {
         actions.append(&mut mkpath_actions);
         actions.append(&mut include_actions);
 
-        debug!(logger, "read config from file";
-               "file" => %template_path.display(),
-               "config" => format!("{:#?}", config));
+        // debug!(logger, "read config from file";
+        //        "file" => %template_path.display(),
+        //        "config" => format!("{:#?}", config));
 
         Ok(Template { actions })
     }
 }
 
-impl<'a> ActionSet<'a> for Template {
-    fn get_actionables(&'a self) -> Box<Iterator<Item = &Box<Actionable>> + 'a> {
-        Box::new(self.actions.iter())
-    }
-}
 
-fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Box<Actionable>> {
-    let mut actions: Vec<Box<Actionable>> = vec![];
+fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action> {
+    let mut actions: Vec<Action> = vec![];
 
     for action_str in init_lines.iter() {
         actions.push(Box::new(Action::Shell(
@@ -67,8 +62,8 @@ fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Box<Ac
     actions
 }
 
-fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Box<Actionable>> {
-    let mut actions: Vec<Box<Actionable>> = vec![];
+fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
+    let mut actions: Vec<Action> = vec![];
 
     for path in paths.iter().filter(|p| p.is_relative()) {
         let mut path = cwd.join(path);
@@ -83,8 +78,8 @@ fn make_include_actions(
     includes: &BTreeMap<PathBuf, Option<IncludeOptions>>,
     template_dir: &Path,
     cwd: &Path,
-) -> Vec<Box<Actionable>> {
-    let mut actions: Vec<Box<Actionable>> = vec![];
+) -> Vec<Action> {
+    let mut actions: Vec<Action> = vec![];
 
     for (path, options) in includes {
         // determine source file/folder
@@ -99,16 +94,14 @@ fn make_include_actions(
             _ => cwd.join(Path::new(path.file_name().unwrap())),
         };
 
-        actions.push(Box::new(Action::Copy { from, to }));
+        actions.push(Action::OS());
     }
 
     actions
 }
 
-impl Actionable for Template {
-    fn commit(&self, logger: &Logger) -> Result<()> {
-        debug!(logger, "commiting actions"; "n" => self.actions.len());
-
+impl ActionTrait for Template {
+    fn run<'a>(&self,context: &'a app::Context) -> Result<()> {
         Ok(())
     }
 }

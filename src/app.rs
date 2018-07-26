@@ -5,7 +5,7 @@ use std::env;
 use std::path::PathBuf;
 
 use args::{Args, Command};
-use action::Action;
+use action::ActionTrait;
 use error::*;
 
 #[derive(Debug)]
