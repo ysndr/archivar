@@ -17,6 +17,12 @@ pub struct Template {
     actions: Box<Action>,
 }
 
+impl From<Template> for super::Action {
+    fn from(action: Template) -> super::Action {
+        super::Action::Template(action)
+    }
+}
+
 impl Template {
     pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
         // debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());

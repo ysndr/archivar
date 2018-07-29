@@ -26,29 +26,14 @@ pub enum Action {
     Noop,
 }
 
+
 impl ActionTrait for Action {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
         Ok(())
     }
 }
 
-impl From<OS> for Action {
-    fn from(action: OS) -> Action {
-        Action::OS(action)
-    }
-}
 
-impl From<template::Template> for Action {
-    fn from(action: template::Template) -> Action {
-        Action::Template(action)
-    }
-}
-
-impl From<Message> for Action {
-    fn from(action: Message) -> Action {
-        Action::Message(action)
-    }
-}
 
 // TODO: why is `impl <T: AsRef<Command> From<T>` not working
 impl From<Command> for Action {
