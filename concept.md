@@ -26,9 +26,7 @@ header-includes:
       \usepackage{enumitem}
       \setlist[itemize,1]{label=::}
 
-      \usepackage[ttdefault=true]{AnonymousPro}
-      \renewcommand\familydefault{\ttdefault}
-
+      
 babel-newcommands: |
       \addto\captionsngerman{
         \renewcommand{\figurename}{Abb.}%
@@ -36,35 +34,49 @@ babel-newcommands: |
       }
 ...
 
-
 # Archivar
 
-### :: USAGE:
-    archivar [FLAGS] <SUBCOMMAND>
+## Usage
 
-### :: FLAGS:
-    -v               Increases verbosity
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+```
+archivar 0.1.0
+Yannik Sander <me@ysndr.de>
+the trachkeeper of your stuff
 
-### :: SUBCOMMANDS:
-    archive      archive project
+USAGE:
+    archivar [FLAGS] [OPTIONS] <SUBCOMMAND>
+
+FLAGS:
+        --no-git       disable git integration
+    -h, --help         Prints help information
+    -V, --version      Prints version information
+    -v, --verbosity    switch on verbosity
+
+OPTIONS:
+    -p, --path <path>     [default: .]
+
+SUBCOMMANDS:
+    archive
     help         Prints this message or the help of the given subcommand(s)
-    init         command to execute
-    new          create new project
-    unarchive    unarchive project
-
-### :: archive
-
-- USAGE:
-`archivar` **`archive`** `[FLAGS]` `[OPTIONS]` `<PATH>`
-
-- FLAGS:
+    init
+    new
+    unarchive
+```
 
 
+## Global Arguments
 
+## Subcommands
 
+### `init`
+initializes an archivar managed folder in  archivar path.
 
-kjlkjlkjlkjljlkjlk
+(@) *check:* archivar_path is **directory**
+(@) *check:* archivar_path is **empty**
+(@) *write:* archivar_path/.archivar
 
-![Here is my caption, with *emphasis* etc.](https://avatars0.githubusercontent.com/u/3044?s=88&v=4)
+### `new`
+
+### `archive`
+
+### `unarchive`
