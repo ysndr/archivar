@@ -20,6 +20,7 @@ extern crate structopt;
 extern crate error_chain;
 
 extern crate predicates;
+extern crate assert_fs;
 
 mod action;
 mod app;

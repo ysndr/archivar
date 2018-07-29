@@ -3,6 +3,8 @@ use args::Command;
 use constants::*;
 use error::*;
 use std::borrow::Borrow;
+
+use assert_fs::prelude::*;
 // use template::Template;
 
 mod message;
