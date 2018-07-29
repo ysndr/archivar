@@ -19,6 +19,8 @@ extern crate structopt;
 #[macro_use]
 extern crate error_chain;
 
+extern crate predicates;
+
 mod action;
 mod app;
 mod args;
