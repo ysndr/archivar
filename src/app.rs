@@ -10,9 +10,9 @@ use error::*;
 
 #[derive(Debug)]
 pub struct Context {
-    cwd: PathBuf,
-    path: PathBuf,
-    shell: RefCell<Shell>,
+    pub cwd: PathBuf,
+    pub path: PathBuf,
+    pub shell: RefCell<Shell>,
 }
 
 impl Context {

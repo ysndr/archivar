@@ -1,6 +1,6 @@
 use std::fmt;
 use std::path::Path;
-use predicates::prelude::Predicate;
+use predicates::prelude::*;
 use app;
 use args::Command;
 use constants::*;
@@ -44,23 +44,57 @@ impl ActionTrait for Action {
 }
 
 
-
-// TODO: why is `impl <T: AsRef<Command> From<T>` not working
-impl From<Command> for Action {
-    fn from(command: Command) -> Action {
-        let actions: Vec<Action> = match command {
-            Command::Init => vec![Action::Noop, Message::Info("hello".to_owned()).into()],
-            _ => vec![],
-        };
-
-        Action::Group(actions)
-    }
-}
 impl<'a> From<&'a Command> for Action {
     fn from(command: &Command) -> Action {
         command.to_owned().into()
     }
 }
+
+
+// TODO: why is `impl <T: AsRef<Command> From<T>` not working
+impl From<Command> for Action {
+    fn from(command: Command) -> Action {
+        match command {
+            Command::Init => Self::make_init(&command),
+            _ => Action::Noop,
+        }
+    }
+}
+
+impl Action {
+    fn make_init(_command: &Command) -> Action {
+        let actions = vec![
+                check::Check::new(box |context| {
+                    if !predicate::path::missing()
+                    .eval(&context.path.join(constants::ARCHIVAR_FILE_NAME)) {
+                        bail!("There is an achivar dir in here already");
+                    }
+                    Ok(())
+                    // if !predicate::function(|| {
+                    //     context.path.is_dir()
+                    //     && match &context.path.read_dir() {
+                    //         Ok(reader) => reader.empty(),
+                    //         _ => false
+                    //     }
+                    // }) { bail!("dir not empty"); } 
+                }).into(),
+                OS::Touch {
+                    path: constants::ARCHIVAR_FILE_NAME.into(),
+                    mkparents : true
+                }.into()
+
+            ];
+        
+        Action::Group(actions)
+
+
+    }
+
+
+}
+
+
+
 
 #[cfg(test)]
 mod tests {
@@ -74,7 +108,7 @@ mod tests {
 
         let command = Command::Init;
         let expected = Action::Group(vec![
-            check::Check::new(box |_| Ok(())).into(), 
+            check::Check::new(box |_| Ok(())).into(),
             OS::Touch{path, mkparents}.into()]);
 
         assert_eq!(expected, Action::from(&command));
