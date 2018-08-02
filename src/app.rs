@@ -5,8 +5,7 @@ use std::env;
 use std::path::PathBuf;
 
 use args::{Args, Command};
-use action::ActionTrait;
-use error::*;
+
 
 #[derive(Debug)]
 pub struct Context {

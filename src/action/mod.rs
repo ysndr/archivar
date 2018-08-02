@@ -3,9 +3,6 @@ use args::Command;
 use constants::*;
 use error::*;
 use predicates::prelude::*;
-use std::borrow::Borrow;
-use std::fmt;
-use std::path::Path;
 use std::path::PathBuf;
 
 use constants;
