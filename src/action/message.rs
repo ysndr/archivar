@@ -2,7 +2,7 @@ use super::ActionTrait;
 use app;
 use error::*;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Action {
     Info(String),
     Warn(String),
@@ -22,5 +22,17 @@ impl ActionTrait for Action {
 impl From<Action> for super::Action {
     fn from(action: Action) -> super::Action {
         super::Action::Message(action)
+    }
+}
+
+impl PartialEq for Action {
+    fn eq(&self, other: &Self) -> bool {
+        use self::Action::*;
+        match (self, other) {
+            (Info(_), Info(_)) => true,
+            (Warn(_), Warn(_)) => true,
+            (Error(_), Error(_)) => true,
+            _ => false,
+        }
     }
 }
