@@ -72,7 +72,7 @@ SUBCOMMANDS:
 initializes an archivar managed folder in  archivar path.
 
 (@) *check:* archivar_path is **directory**
-(@) *check:* archivar_path is **empty**
+(@) ~~*check:* archivar_path is **empty**~~ <!-- TODO: should i check this? -->
 (@) *write:* archivar_path/.archivar
 
 ### `new`
