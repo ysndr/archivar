@@ -1,14 +1,21 @@
+use std::fmt;
+use std::path::Path;
+use predicates::prelude::Predicate;
 use app;
 use args::Command;
 use constants::*;
 use error::*;
 use std::borrow::Borrow;
+    use std::path::PathBuf;
+
+use constants;
 
 use assert_fs::prelude::*;
 // use template::Template;
 
 mod message;
 mod os;
+mod check;
 mod template;
 
 use self::message::Action as Message;
@@ -25,6 +32,7 @@ pub enum Action {
     Message(Message),
     Group(Vec<Action>),
     Template(template::Template),
+    Check(check::Check),
     Noop,
 }
 
@@ -60,12 +68,14 @@ mod tests {
 
     #[test]
     fn action_set_from_init_command() {
+        let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let mkparents = true;
+
+
         let command = Command::Init;
         let expected = Action::Group(vec![
-            Action::Noop,
-            Message::Info("hello".to_owned()).into()]);
+            OS::Touch{path, mkparents}.into()]);
 
         assert_eq!(expected, Action::from(&command));
-        assert_eq!(expected, command.into());
     }
 }
