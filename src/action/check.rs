@@ -32,5 +32,16 @@ impl ActionTrait for Check {
         fn run<'a>(&self, context: &'a app::Context) -> Result<()>{
             self.0(context)
         }
+}
 
+impl Check {
+    pub fn new(fun : Box<Fn(&app::Context) -> Result<()>>) -> Check {
+        Check(fun)
+    }
+}
+
+impl From<Box<Fn(&app::Context) -> Result<()>>> for super::Action{
+     fn from(fun: Box<Fn(&app::Context) -> Result<()>>) -> super::Action {
+        Check::new(fun).into()
+    }
 }

@@ -74,6 +74,7 @@ mod tests {
 
         let command = Command::Init;
         let expected = Action::Group(vec![
+            check::Check::new(box |_| Ok(())).into(), 
             OS::Touch{path, mkparents}.into()]);
 
         assert_eq!(expected, Action::from(&command));
