@@ -51,6 +51,7 @@ impl From<Command> for Action {
         match command {
             Command::Init => Self::make_init(&command),
             Command::Archive { dir } => Self::make_archive(&dir),
+            Command::Unarchive { dir } => Self::make_unarchive(&dir),
             _ => Action::Noop,
         }
     }
@@ -115,7 +116,7 @@ impl Action {
                 if archive_path.exists() {
                     bail!(
                         "path `{}` already exists in archive",
-                        project_path.display()
+                        dir_copy.display()
                     );
                 }
 
@@ -127,6 +128,62 @@ impl Action {
             OS::Move {
                 from: dir.clone(),
                 to: PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&dir),
+            }.into(),
+        );
+
+        Action::Group(actions)
+    }
+
+    fn make_unarchive(dir: &PathBuf) -> Action {
+        debug!("make unarchive actions for `{}`", dir.display());
+
+        let mut actions: Vec<Action> = vec![];
+        let dir_copy = dir.clone();
+        actions.push(
+            check::Check::new(box move |context| {
+                if !context.path.join(constants::ARCHIVAR_FILE_NAME).exists() {
+                    bail!(
+                        "your selected path `{}` is not an archivar dir",
+                        context.path.display()
+                    );
+                }
+
+                let project_path = context.path.join(dir_copy.clone());
+
+                let archive_path = context
+                    .path
+                    .join(constants::ARCHIVE_FOLDER_NAME)
+                    .join(dir_copy.clone());
+
+                let project_file_path = archive_path
+                    .join(dir_copy.clone())
+                    .join(constants::ARCHIVAR_FILE_NAME);
+
+                if !archive_path.exists() || project_file_path.exists() {
+                    bail!(
+                        "no project at `{}`",
+                        dir_copy
+                            .clone()
+                            .join(constants::ARCHIVAR_FILE_NAME)
+                            .display()
+                    );
+                }
+
+                if archive_path.exists() {
+                    bail!(
+                        "path `{}` already exists in workspace",
+                        dir_copy.display()
+                    );
+                }
+
+                Ok(())
+            }).into(),
+        );
+
+        actions.push(
+            OS::Move {
+                from: PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&dir),
+                to: dir.clone(),
             }.into(),
         );
 
@@ -171,4 +228,22 @@ mod tests {
         assert_eq!(expected, Action::from(&command));
     }
 
+    #[test]
+    fn action_set_from_unarchive_command() {
+        let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let example_project: PathBuf = "examples/project".into();
+        let archive_path = PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&example_project);
+
+        let command = Command::Unarchive {
+            dir: example_project.clone(),
+        };
+        let expected = Action::Group(vec![
+            check::Check::new(box |_| Ok(())).into(),
+            OS::Move {
+                from: archive_path,
+                to: example_project,
+            }.into(),
+        ]);
+        assert_eq!(expected, Action::from(&command));
+    }
 }
