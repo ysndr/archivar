@@ -77,6 +77,41 @@ initializes an archivar managed folder in  archivar path.
 
 ### `new`
 
+```
+USAGE:
+    archivar new <dest> [template]
+
+ARGS:
+    <dest>        destination path
+    <template>    template path
+```
+
+
 ### `archive`
 
+```
+USAGE:
+    archivar archive <dir>
+
+ARGS:
+    <dir>    target path
+```
+
+(@) *check:* user is in archivar path
+(@) *check:* `<dir>` is path with project file 
+(@) *move:* `<dir>` to archive
+
+
 ### `unarchive`
+
+```
+USAGE:
+    archivar unarchive <dir>
+
+ARGS:
+    <dir>    target path
+```
+
+(@) *check:* user is in archivar path
+(@) *check:* `archivar/<dir>` is path with project file 
+(@) *move:* `<dir>` from archive
