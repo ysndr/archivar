@@ -50,6 +50,7 @@ impl From<Command> for Action {
     fn from(command: Command) -> Action {
         match command {
             Command::Init => Self::make_init(&command),
+            Command::Archive { dir } => Self::make_archive(&dir),
             _ => Action::Noop,
         }
     }
@@ -57,6 +58,8 @@ impl From<Command> for Action {
 
 impl Action {
     fn make_init(_command: &Command) -> Action {
+        debug!("make init actions");
+
         let mut actions = vec![];
 
         actions.push(
@@ -74,6 +77,56 @@ impl Action {
             OS::Touch {
                 path: constants::ARCHIVAR_FILE_NAME.into(),
                 mkparents: true,
+            }.into(),
+        );
+
+        Action::Group(actions)
+    }
+
+    fn make_archive(dir: &PathBuf) -> Action {
+        debug!("make archive actions for `{}`", dir.display());
+
+        let mut actions: Vec<Action> = vec![];
+        let dir_copy = dir.clone();
+        actions.push(
+            check::Check::new(box move |context| {
+                if !context.path.join(constants::ARCHIVAR_FILE_NAME).exists() {
+                    bail!(
+                        "your selected path `{}` is not an archivar dir",
+                        context.path.display()
+                    );
+                }
+
+                let project_path = context.path.join(dir_copy.clone());
+                let project_file_path = context
+                    .path
+                    .join(dir_copy.clone())
+                    .join(constants::ARCHIVAR_FILE_NAME);
+
+                let archive_path = context
+                    .path
+                    .join(constants::ARCHIVE_FOLDER_NAME)
+                    .join(dir_copy.clone());
+
+                if !project_path.exists() || project_file_path.exists() {
+                    bail!("no project at `{}`", project_path.display());
+                }
+
+                if archive_path.exists() {
+                    bail!(
+                        "path `{}` already exists in archive",
+                        project_path.display()
+                    );
+                }
+
+                Ok(())
+            }).into(),
+        );
+
+        actions.push(
+            OS::Move {
+                from: dir.clone(),
+                to: PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&dir),
             }.into(),
         );
 
@@ -99,17 +152,22 @@ mod tests {
         assert_eq!(expected, Action::from(&command));
     }
 
-
+    #[test]
     fn action_set_from_archive_command() {
         let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
-        let mkparents = true;
+        let example_project: PathBuf = "examples/project".into();
+        let archive_path = PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&example_project);
 
-        let command = Command::Init;
+        let command = Command::Archive {
+            dir: example_project.clone(),
+        };
         let expected = Action::Group(vec![
             check::Check::new(box |_| Ok(())).into(),
-            OS::Touch { path, mkparents }.into(),
+            OS::Move {
+                from: example_project,
+                to: archive_path,
+            }.into(),
         ]);
-
         assert_eq!(expected, Action::from(&command));
     }
 
