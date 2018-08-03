@@ -11,11 +11,13 @@ use assert_fs::prelude::*;
 // use template::Template;
 
 mod check;
+mod constructors;
 mod message;
 mod os;
 mod template;
-mod constructors;
 
+use self::check::Check;
+use self::check::Fail;
 use self::message::Action as Message;
 use self::os::Action as OS;
 
@@ -30,7 +32,8 @@ pub enum Action {
     Message(Message),
     Group(Vec<Action>),
     Template(template::Template),
-    Check(check::Check),
+    Check(Check),
+    Fail(Fail),
     Noop,
 }
 
@@ -53,6 +56,8 @@ impl From<Command> for Action {
             Command::Init => constructors::make_init(&command),
             Command::Archive { dir } => constructors::make_archive(&dir),
             Command::Unarchive { dir } => constructors::make_unarchive(&dir),
+            Command::New { dest, template } => constructors::make_new(&dest, &template),
+
             _ => Action::Noop,
         }
     }
@@ -113,4 +118,24 @@ mod tests {
         ]);
         assert_eq!(expected, Action::from(&command));
     }
+
+    #[test]
+    fn action_set_from_new_command() {
+        let example_project: PathBuf = "examples/project".into();
+
+        let command = Command::New {
+            dest: example_project.clone(),
+            template: None,
+        };
+        let expected = Action::Group(vec![
+            check::Check::new(box |_| Ok(())).into(),
+            OS::Touch {
+                path: example_project.join(constants::PROJECT_FILE_NAME),
+                mkparents: true,
+            }.into(),
+            Message::Info("".to_owned()).into(),
+        ]);
+        assert_eq!(expected, Action::from(&command));
+    }
+
 }

@@ -1,4 +1,4 @@
-use super::{check, Action, OS};
+use super::{check, Action, OS, Message, template};
 use app;
 use args::Command;
 use error::*;
@@ -36,14 +36,13 @@ pub fn make_archive(dir: &PathBuf) -> Action {
     let dir_copy = dir.clone();
     actions.push(
         check::Check::new(box move |context| {
-
             let project_path = context.path.join(dir_copy.clone());
             let archive_path = context
                 .path
                 .join(constants::ARCHIVE_FOLDER_NAME)
                 .join(dir_copy.clone());
 
-            is_valid_root(&context)?;
+            is_valid_root(&context.path)?;
             is_valid_project_path(&project_path)?;
 
             if archive_path.exists() {
@@ -71,14 +70,13 @@ pub fn make_unarchive(dir: &PathBuf) -> Action {
     let dir_copy = dir.clone();
     actions.push(
         check::Check::new(box move |context| {
-
             let project_path = context.path.join(dir_copy.clone());
             let archive_path = context
                 .path
                 .join(constants::ARCHIVE_FOLDER_NAME)
                 .join(dir_copy.clone());
 
-            is_valid_root(&context)?;
+            is_valid_root(&context.path)?;
             is_valid_project_path(&archive_path)?;
 
             if project_path.exists() {
@@ -99,19 +97,56 @@ pub fn make_unarchive(dir: &PathBuf) -> Action {
     Action::Group(actions)
 }
 
-fn make_new(dest: &PathBuf, template: &PathBuf) -> Action {
+pub fn make_new(dest: &PathBuf, template: &Option<PathBuf>) -> Action {
+    let mut actions = vec![];
 
-    Action::Noop
+    let moved_dest = dest.clone();
+    actions.push(
+        check::Check::new(box move |context| {
+            is_valid_root(&context.path)?;
+            if context.path.join(&moved_dest).exists() {
+                bail!(
+                    "folder name for project {} already exists",
+                    moved_dest.display()
+                );
+            }
+            if context
+                .path
+                .join(constants::ARCHIVE_FOLDER_NAME)
+                .join(&moved_dest)
+                .exists()
+            {
+                bail!(
+                    "archived folder for project {} exists",
+                    moved_dest.display()
+                );
+            }
+            not_in_project(&context.path, &moved_dest)?;
+            Ok(())
+        }).into(),
+    );
+
+    actions.push(
+        OS::Touch {
+            path: dest.join(constants::PROJECT_FILE_NAME),
+            mkparents: true,
+        }.into(),
+    );
+    actions.push(match template {
+        None => Message::Info("no template given - skipping template generation".to_owned()).into(),
+        Some(template_path) => template::Template::make(template_path, dest).into(), 
+    });
+
+
+
+    Action::Group(actions)
 }
 
-
-
-
-fn is_valid_root(context: &app::Context) -> Result<()> {
-    if !context.path.join(constants::ARCHIVAR_FILE_NAME).exists() {
+fn is_valid_root(path: &PathBuf) -> Result<()> {
+    if !path.join(constants::ARCHIVAR_FILE_NAME).exists() {
         bail!(
             "your selected path `{}` is not an archivar dir",
-            context.path.display()
+            path.display()
         );
     }
 
@@ -122,7 +157,10 @@ fn is_valid_project_path(dir: &PathBuf) -> Result<()> {
     let project_file_path = dir.join(constants::ARCHIVAR_FILE_NAME);
 
     if dir.starts_with(constants::TEMPLATE_NAMESPACE) {
-        bail!("its not allows to manage projects inside templates namespace (`{}`)", constants::TEMPLATE_NAMESPACE);
+        bail!(
+            "its not allows to manage projects inside templates namespace (`{}`)",
+            constants::TEMPLATE_NAMESPACE
+        );
     }
 
     if !dir.exists() || project_file_path.exists() {
@@ -137,9 +175,23 @@ fn not_in_managed_subdir(dir: &PathBuf) -> Result<()> {
     for comp in dir.components() {
         path = path.join(comp);
         if path.join(constants::PROJECT_FILE_NAME).exists() {
-            bail!("`{}` is subdir of manged workspace `{}`", dir.display(), path.display());
+            bail!(
+                "`{}` is subdir of manged workspace `{}`",
+                dir.display(),
+                path.display()
+            );
         }
     }
     Ok(())
+}
 
+fn not_in_project(root: &PathBuf, project_path: &PathBuf) -> Result<()> {
+    let mut path = root.to_owned();
+    for comp in project_path.components() {
+        path = path.join(comp);
+        if path.join(constants::PROJECT_FILE_NAME).exists() {
+            bail!("`{}` is subdir of existing project", project_path.display());
+        }
+    }
+    Ok(())
 }

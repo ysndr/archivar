@@ -1,4 +1,4 @@
-use action::{Action, ActionTrait};
+use super::{Action, ActionTrait, Check, Fail};
 use constants::{GITKEEP_FILE_NAME, TEMPLATE_FILE_NAME};
 use error::*;
 use serde_yaml;
@@ -14,7 +14,7 @@ use super::OS;
 
 #[derive(Debug, PartialEq)]
 pub struct Template {
-    actions: Box<Action>,
+    action: Box<Action>,
 }
 
 impl From<Template> for super::Action {
@@ -23,8 +23,17 @@ impl From<Template> for super::Action {
     }
 }
 
+impl From<Result<Template>> for super::Action {
+    fn from(result: Result<Template>) -> super::Action {
+        match result {
+            Err(e) => Fail::new(e.to_string()).into(),
+            Ok(t) => t.into()
+        }
+    }
+}
+
 impl Template {
-    pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
+     pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
         // debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
 
         let template_file = template_path.join(TEMPLATE_FILE_NAME);
@@ -54,7 +63,7 @@ impl Template {
         //        "config" => format!("{:#?}", config));
 
         Ok(Template {
-            actions: box Action::Group(actions),
+            action: box Action::Group(actions),
         })
     }
 }

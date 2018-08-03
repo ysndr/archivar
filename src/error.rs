@@ -10,6 +10,7 @@ error_chain! {
             description("invalid command")
             display("invalid command ({}) issued", command)
         }
+        Template
 
 
     }
