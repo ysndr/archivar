@@ -98,4 +98,19 @@ mod tests {
 
         assert_eq!(expected, Action::from(&command));
     }
+
+
+    fn action_set_from_archive_command() {
+        let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let mkparents = true;
+
+        let command = Command::Init;
+        let expected = Action::Group(vec![
+            check::Check::new(box |_| Ok(())).into(),
+            OS::Touch { path, mkparents }.into(),
+        ]);
+
+        assert_eq!(expected, Action::from(&command));
+    }
+
 }
