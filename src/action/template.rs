@@ -35,7 +35,7 @@ impl From<Result<Template>> for super::Action {
 }
 
 impl Template {
-     pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
+    pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
         // debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
 
         let (template_file, template_dir) = canonicalize_template_path(template_path);

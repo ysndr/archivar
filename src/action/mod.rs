@@ -7,19 +7,19 @@ use std::path::PathBuf;
 
 use constants;
 
-use assert_fs::prelude::*;
 // use template::Template;
 
 mod check;
 mod constructors;
 mod message;
 mod os;
-mod template;
+pub mod template;
 
 use self::check::Check;
 use self::check::Fail;
 use self::message::Action as Message;
 use self::os::Action as OS;
+
 
 pub trait ActionTrait {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()>;
@@ -35,7 +35,10 @@ pub enum Action {
     Check(Check),
     Fail(Fail),
     Noop,
+    #[cfg(test)]
+    Wildcard(Wildcard)
 }
+
 
 impl ActionTrait for Action {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
@@ -63,9 +66,43 @@ impl From<Command> for Action {
     }
 }
 
+
+#[derive(Debug)]
+#[cfg(test)]
+struct Wildcard;
+#[cfg(test)]
+impl ActionTrait for Wildcard {
+    fn run<'a>(&self, _context: &'a app::Context) -> Result<()> {
+        Ok(())
+    }
+}
+#[cfg(test)]
+impl<T: ActionTrait> PartialEq<T> for Wildcard {
+    fn eq(&self, _: &T) -> bool {
+        true
+    }
+}
+#[cfg(test)]
+impl From<Wildcard> for Action {
+    fn from(_:  Wildcard) -> Action {
+        Action::Wildcard(Wildcard)
+    }
+}
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_fs::prelude::*;
+    use assert_fs::*;
+    use predicates::prelude::*;
+
+    use ::logger;
+
+   
+
+
 
     #[test]
     fn action_set_from_init_command() {
@@ -121,12 +158,13 @@ mod tests {
 
     #[test]
     fn action_set_from_new_command() {
-        let example_project: PathBuf = "examples/project".into();
+        let example_project: PathBuf = "examples/archivar/project".into();
 
         let command = Command::New {
             dest: example_project.clone(),
             template: None,
         };
+
         let expected = Action::Group(vec![
             check::Check::new(box |_| Ok(())).into(),
             OS::Touch {
@@ -137,5 +175,26 @@ mod tests {
         ]);
         assert_eq!(expected, Action::from(&command));
     }
+
+    #[test]
+    fn action_set_from_new_command_with_template() {
+        logger::setup_logger(log::LevelFilter::Trace).unwrap();
+
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("example", &["*"]).unwrap();
+        
+        let example_project: PathBuf = temp.path().join("archivar/project");
+        let template_file: PathBuf = temp.path().to_owned();
+        
+        let result_A = Action::from(Command::New {
+            dest: example_project.clone(),
+            template: Option::Some(template_file.clone()),
+        });
+
+        debug!("result: {:?}", result_A);
+
+        temp.close().unwrap();
+    }
+
 
 }
