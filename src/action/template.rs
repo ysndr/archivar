@@ -7,6 +7,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::{fs, io};
 
+use log;
+
 use app;
 
 use super::Message;
@@ -27,7 +29,7 @@ impl From<Result<Template>> for super::Action {
     fn from(result: Result<Template>) -> super::Action {
         match result {
             Err(e) => Fail::new(e.to_string()).into(),
-            Ok(t) => t.into()
+            Ok(t) => t.into(),
         }
     }
 }
@@ -36,7 +38,7 @@ impl Template {
      pub fn make(template_path: &Path, project_path: &Path) -> Result<Self> {
         // debug!(logger, "making Template actions"; "template" => %template_path.display(), "project" => %project_path.display());
 
-        let template_file = template_path.join(TEMPLATE_FILE_NAME);
+        let (template_file, template_dir) = canonicalize_template_path(template_path);
 
         let config = TemplateConfig::from_file(&template_file)?;
 
@@ -50,7 +52,7 @@ impl Template {
 
         let mut include_actions = make_include_actions(
             config.include.as_ref().unwrap_or(&BTreeMap::new()),
-            template_path,
+            &template_dir,
             project_path,
         );
 
@@ -72,10 +74,10 @@ fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action
     let mut actions: Vec<Action> = vec![];
 
     for action_str in init_lines.iter() {
-        actions.push(Action::OS(OS::Shell(
-            action_str.to_string(),
-            cwd.to_path_buf(),
-        )));
+        actions.push(Action::OS(OS::Shell {
+            command: action_str.to_string(),
+            cwd: Some(cwd.to_path_buf()),
+        }));
     }
     actions
 }
@@ -94,7 +96,7 @@ fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
 
 fn make_include_actions(
     includes: &BTreeMap<PathBuf, Option<IncludeOptions>>,
-    template_dir: &Path,
+    template_dir: &PathBuf,
     cwd: &Path,
 ) -> Vec<Action> {
     let mut actions: Vec<Action> = vec![];
@@ -125,18 +127,29 @@ impl ActionTrait for Template {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct TemplateConfig {
+pub struct TemplateConfig {
     init: Option<Vec<String>>,
     paths: Option<Vec<PathBuf>>,
     include: Option<BTreeMap<PathBuf, Option<IncludeOptions>>>,
 }
 
 impl TemplateConfig {
-    pub fn from_file(template_path: &Path) -> Result<Self> {
-        let file = fs::File::open(template_path)?;
+    pub fn from_file(template_file: &PathBuf) -> Result<Self> {
+        debug!("create config from template: {:?}", template_file);
+        let file = fs::File::open(template_file)?;
         let buf_reader = io::BufReader::new(file);
         let template: TemplateConfig = serde_yaml::from_reader(buf_reader)?;
         Ok(template)
+    }
+}
+
+
+pub fn canonicalize_template_path(template_path: &Path) -> (PathBuf, PathBuf) {
+    if template_path.file_name().unwrap() == TEMPLATE_FILE_NAME {
+            (template_path.to_owned(), template_path.parent().unwrap().to_owned())
+    } else {
+            let file = template_path.join(TEMPLATE_FILE_NAME);
+            (file, template_path.to_owned())
     }
 }
 
@@ -153,7 +166,7 @@ mod tests {
 
     #[test]
     fn read_from_file() {
-        let config = TemplateConfig::from_file(&Path::new("test/.template.yaml")).unwrap();
+        let config = TemplateConfig::from_file(&PathBuf::from("test/.template.yaml")).unwrap();
 
         assert_eq!(config.include.unwrap().len(), 6);
         assert_eq!(config.init.unwrap().len(), 2);
