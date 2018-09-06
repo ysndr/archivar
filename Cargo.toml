@@ -19,5 +19,8 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.7"
 
-predicates = "0.5"
-assert_fs = "0.3"
+predicates = "0.9"
+assert_fs = "0.9"
+
+[dev-dependencies]
+pretty_assertions = "0.5"

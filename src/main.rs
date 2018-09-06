@@ -1,7 +1,11 @@
-#![feature(box_syntax, box_patterns)]
-
+#![feature(box_syntax, box_patterns, extern_prelude)]
 #[macro_use]
 extern crate log;
+
+#[cfg(test)] // <-- not needed in examples + integration tests
+#[macro_use]
+extern crate pretty_assertions;
+
 extern crate fern;
 
 extern crate chrono;
