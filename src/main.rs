@@ -1,43 +1,18 @@
-#![feature(box_syntax, box_patterns, extern_prelude)]
-#[macro_use]
 extern crate log;
-
-#[cfg(test)] // <-- not needed in examples + integration tests
-#[macro_use]
-extern crate pretty_assertions;
-
 extern crate fern;
-
 extern crate chrono;
 
-extern crate shell;
+extern crate libarchivar;
 
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_yaml;
-
-#[macro_use]
-extern crate structopt;
-
-#[macro_use]
-extern crate error_chain;
-
-extern crate predicates;
-extern crate assert_fs;
-
-mod action;
-mod app;
-mod args;
-mod constants;
-mod error;
-mod logger;
 // mod template;
 
-use app::Archivar as App;
-use args::Args;
-use error::*;
-use structopt::StructOpt;
+mod logger;
+
+
+use libarchivar::app::Archivar as App;
+use libarchivar::app::Args;
+use libarchivar::error::*;
+use libarchivar::structopt::*;
 
 fn main() {
     let args = Args::from_args();

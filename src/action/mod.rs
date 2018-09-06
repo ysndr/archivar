@@ -1,4 +1,4 @@
-use app;
+use super::app;
 use args::Command;
 use constants::*;
 use error::*;
@@ -122,7 +122,7 @@ mod tests {
     use assert_fs::*;
     use predicates::prelude::*;
 
-    use ::logger;
+    use logger;
 
    
 

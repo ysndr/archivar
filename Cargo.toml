@@ -3,6 +3,15 @@ name = "archivar"
 version = "0.1.0"
 authors = ["Yannik Sander <me@ysndr.de>"]
 
+
+[lib]
+name = "libarchivar"
+path = "src/lib.rs"
+
+[[bin]]
+name = "archivar"
+path = "src/main.rs"
+
 [dependencies]
 structopt = "0.2"
 

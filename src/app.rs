@@ -1,10 +1,9 @@
-// use action::Actionable;
 use shell::{Shell, Verbosity};
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::path::PathBuf;
 
-use args::{Args, Command};
+pub use args::{Args, Command};
 use action::*;
 use error::*;
 
