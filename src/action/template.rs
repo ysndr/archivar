@@ -122,6 +122,9 @@ fn make_include_actions(
 
 impl ActionTrait for Template {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
+        context.shell().info("Building by template...")?;
+        self.action.run(context)?;
+        context.shell().info("Done!")?;
         Ok(())
     }
 }

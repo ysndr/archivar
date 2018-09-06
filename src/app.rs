@@ -5,6 +5,8 @@ use std::env;
 use std::path::PathBuf;
 
 use args::{Args, Command};
+use action::*;
+use error::*;
 
 
 #[derive(Debug)]
@@ -30,6 +32,7 @@ impl Archivar {
     pub fn new(args: Args) -> Self {
         let mut shell = Shell::new();
         shell.set_verbosity(match args.verbosity {
+            0 => Verbosity::Normal,
             1 => Verbosity::Normal,
             _ => Verbosity::Verbose,
         });
@@ -50,6 +53,12 @@ impl Archivar {
 
     pub fn shell(&self) -> RefMut<Shell> {
         self.context.shell()
+    }
+
+    pub fn run(&self) -> Result<()> {
+        debug!("start");
+        let action: Action = self.command.clone().into();
+        action.run(&self.context)
     }
 }
 

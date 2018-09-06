@@ -42,7 +42,31 @@ pub enum Action {
 
 impl ActionTrait for Action {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
-        Ok(())
+        match self {
+            Action::OS(action) => action.run(context),
+            Action::Message(action) => action.run(context),
+            Action::Template(action) => action.run(context),
+            Action::Check(action) => action.run(context),
+            Action::Fail(action) => action.run(context),
+            Action::Noop => Ok(()),
+            #[cfg(test)]
+            Action::Wildcard(action) => action.run(context),
+            Action::Group(list) => {
+                let elems = list.len();
+
+                context.shell().info(format!("Running {} actions...", elems))?;
+                debug!("Group: {:?}", list);
+
+
+                for (cur, action) in list.iter().enumerate() {
+                    context.shell().info(format!("Running action {} of {}", cur +1, elems))?;
+                    action.run(context)?;
+                }
+                context.shell().info("Done!")?;
+
+                Ok(())
+            }
+        }
     }
 }
 

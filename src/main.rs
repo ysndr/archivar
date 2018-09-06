@@ -55,10 +55,5 @@ fn main() {
 
 fn run(app: &App) -> Result<()> {
     app.shell().info(format!("{:?}", app)).unwrap();
-
-    Err("oof".into())
-
-    // let actions = app.make_actions();
-
-    // app.execute(&*actions)
+    app.run()
 }

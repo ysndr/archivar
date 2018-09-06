@@ -29,6 +29,7 @@ impl From<Check> for super::Action {
 
 impl ActionTrait for Check {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
+        debug!("Performing runtime check");
         self.0(context)
     }
 }

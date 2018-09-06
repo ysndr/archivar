@@ -42,6 +42,8 @@ pub fn make_archive(dir: &PathBuf) -> Action {
                 .join(constants::ARCHIVE_FOLDER_NAME)
                 .join(dir_copy.clone());
 
+            debug!("Check project_path ({}) and archive path ({})", project_path.display(), archive_path.display());
+
             is_valid_root(&context.path)?;
             is_valid_project_path(&project_path)?;
 
@@ -143,6 +145,7 @@ pub fn make_new(dest: &PathBuf, template: &Option<PathBuf>) -> Action {
 }
 
 fn is_valid_root(path: &PathBuf) -> Result<()> {
+     debug!("Ensure {} path is valid root", path.display());
     if !path.join(constants::ARCHIVAR_FILE_NAME).exists() {
         bail!(
             "your selected path `{}` is not an archivar dir",
@@ -155,7 +158,7 @@ fn is_valid_root(path: &PathBuf) -> Result<()> {
 
 fn is_valid_project_path(dir: &PathBuf) -> Result<()> {
     let project_file_path = dir.join(constants::ARCHIVAR_FILE_NAME);
-
+    debug!("Ensure {} path is valid", dir.display());
     if dir.starts_with(constants::TEMPLATE_NAMESPACE) {
         bail!(
             "its not allows to manage projects inside templates namespace (`{}`)",
@@ -172,6 +175,7 @@ fn is_valid_project_path(dir: &PathBuf) -> Result<()> {
 
 fn not_in_managed_subdir(dir: &PathBuf) -> Result<()> {
     let mut path: PathBuf = "/".into();
+    debug!("Ensure {} is not already managed", dir.display());
     for comp in dir.components() {
         path = path.join(comp);
         if path.join(constants::PROJECT_FILE_NAME).exists() {
