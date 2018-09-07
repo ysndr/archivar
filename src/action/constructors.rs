@@ -1,4 +1,4 @@
-use super::{check, Action, OS, Message, template};
+use super::{check, template, Action, Message, OS};
 use app;
 use args::Command;
 use error::*;
@@ -26,6 +26,11 @@ pub fn make_init(_command: &Command) -> Action {
             mkparents: true,
         }.into(),
     );
+    actions.push(
+        OS::Mkdir {
+            path: constants::ARCHIVE_FOLDER_NAME.into(),
+        }.into(),
+    );
 
     Action::Group(actions)
 }
@@ -43,7 +48,11 @@ pub fn make_archive(dir: &PathBuf) -> Action {
                 .join(constants::ARCHIVE_FOLDER_NAME)
                 .join(dir_copy.clone());
 
-            debug!("Check project_path ({}) and archive path ({})", project_path.display(), archive_path.display());
+            debug!(
+                "Check project_path ({}) and archive path ({})",
+                project_path.display(),
+                archive_path.display()
+            );
 
             is_valid_root(&context.path)?;
             is_valid_project_path(&project_path)?;
@@ -140,8 +149,6 @@ pub fn make_new(dest: &PathBuf, template: &Option<PathBuf>) -> Action {
         Some(template_path) => template::Template::make(template_path, dest).into(), 
     });
 
-
-
     Action::Group(actions)
 }
 
@@ -155,7 +162,6 @@ fn is_valid_root(path: &PathBuf) -> Result<()> {
     }
     Ok(())
 }
-
 
 fn is_no_archivar_root(dir: &PathBuf) -> Result<()> {
     let mut path: PathBuf = "/".into();
