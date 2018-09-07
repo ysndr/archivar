@@ -69,6 +69,9 @@ impl ActionTrait for Action {
             // create files
             Touch { path, mkparents } => {
                 info!("touch ({})", path.display());
+                if *mkparents {
+                     fs::create_dir_all(root.join(path).parent().unwrap())?;
+                }
                 fs::File::create(root.join(path))?;
             }
             

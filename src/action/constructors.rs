@@ -15,6 +15,7 @@ pub fn make_init(_command: &Command) -> Action {
     actions.push(
         check::Check::new(box |context| {
             not_in_managed_subdir(&context.path)?;
+            is_no_archivar_root(&context.path)?;
             Ok(())
         }).into(),
     );
@@ -152,7 +153,23 @@ fn is_valid_root(path: &PathBuf) -> Result<()> {
             path.display()
         );
     }
+    Ok(())
+}
 
+
+fn is_no_archivar_root(dir: &PathBuf) -> Result<()> {
+    let mut path: PathBuf = "/".into();
+    debug!("Ensure {} is not already an archivar path", dir.display());
+    for comp in dir.components() {
+        path = path.join(comp);
+        if path.join(constants::ARCHIVE_FOLDER_NAME).exists() {
+            bail!(
+                "`{}` is subdir of an archivar path `{}`",
+                dir.display(),
+                path.display()
+            );
+        }
+    }
     Ok(())
 }
 
