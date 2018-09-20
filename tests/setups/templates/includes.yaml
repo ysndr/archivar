@@ -1,0 +1,11 @@
+---
+include:
+  ./files/example.txt:
+    dest: example-new.txt
+  ./files/plain.txt: ~
+  files/folder/:
+    dest: files/folder
+  files/intodeep.txt:
+    dest: files/folder/inside/
+
+...

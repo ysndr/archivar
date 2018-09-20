@@ -30,7 +30,7 @@ fn test_init_ok() {
     // test
     temp.child(".archivar").assert(predicates::path::is_file());
     temp.child(".archive").assert(predicates::path::is_dir());
-    
+
     //cleanup
     temp.close().unwrap();
 }

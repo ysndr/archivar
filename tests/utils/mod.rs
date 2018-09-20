@@ -16,3 +16,7 @@ pub fn make_args(subcommand: &str, arg_vec: &[&str], sub_arg_vec: &[&str] ) -> A
     let matches = clap.get_matches_from(args);
     Args::from_clap(&matches)
 }
+
+pub fn cwd() -> ::std::path::PathBuf {
+    ::std::env::current_dir().unwrap()
+}
