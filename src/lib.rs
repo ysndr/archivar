@@ -25,6 +25,8 @@ extern crate predicates;
 extern crate chrono;
 extern crate fern;
 
+extern crate fs_extra;
+
 mod action;
 pub mod app;
 mod args;
