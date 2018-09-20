@@ -1,3 +1,6 @@
+#[cfg(test)]
+#[macro_use]
+extern crate pretty_assertions;
 extern crate log;
 extern crate fern;
 extern crate chrono;

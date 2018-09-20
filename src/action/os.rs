@@ -1,6 +1,7 @@
 use action::ActionTrait;
 use app;
 use error::*;
+use fs_extra::{file, dir};
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -69,19 +70,36 @@ impl ActionTrait for Action {
             // create files
             Touch { path, mkparents } => {
                 info!("touch ({})", path.display());
+                if *mkparents {
+                     fs::create_dir_all(root.join(path).parent().unwrap())?;
+                }
                 fs::File::create(root.join(path))?;
             }
             
             // move files/folders
             Move { from, to } => {
                 info!("move ({} -> {})", from.display(), to.display());
-                fs::rename(root.join(from), root.join(to))?;
+                fs::create_dir_all(root.join(to).parent().unwrap())?;
+                if from.is_dir() {
+                    dir::move_dir(from,root.join(to), 
+                    &dir::CopyOptions {
+                        copy_inside: true, 
+                        .. dir::CopyOptions::new()})?;
+                } else { fs::rename(from, root.join(to))?; }
             }
 
             // copy files/folders
             Copy { from, to } => {
                 info!("copy ({} -> {})", from.display(), to.display());
-                fs::copy(root.join(from), root.join(to))?;
+                fs::create_dir_all(root.join(to).parent().unwrap())?;
+                if from.is_dir() {
+                    dir::copy(
+                        from,
+                        root.join(to),
+                        &dir::CopyOptions {
+                            copy_inside: true, 
+                            .. dir::CopyOptions::new()})?;
+                } else { fs::copy(from, root.join(to))?; }
             }
 
             // chmod files/folders
@@ -105,7 +123,10 @@ impl ActionTrait for Action {
                 let process = base.arg("-c").arg(command);
 
                 let process = if let Some(cwd) = cwd {
+                    let cwd = root.join(cwd);
+                    error!("{}", cwd.display());
                     process.current_dir(cwd)
+
                 } else { process };
 
 

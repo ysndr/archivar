@@ -18,6 +18,7 @@ error_chain! {
     foreign_links {
         Shell(::shell::errors::Error);
         Io(::std::io::Error);
+        FsExtra(::fs_extra::error::Error);
         SerdeYaml(::serde_yaml::Error);
     }
 

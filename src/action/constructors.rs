@@ -1,4 +1,4 @@
-use super::{check, Action, OS, Message, template};
+use super::{check, template, Action, Message, OS};
 use app;
 use args::Command;
 use error::*;
@@ -15,6 +15,7 @@ pub fn make_init(_command: &Command) -> Action {
     actions.push(
         check::Check::new(box |context| {
             not_in_managed_subdir(&context.path)?;
+            is_no_archivar_root(&context.path)?;
             Ok(())
         }).into(),
     );
@@ -23,6 +24,11 @@ pub fn make_init(_command: &Command) -> Action {
         OS::Touch {
             path: constants::ARCHIVAR_FILE_NAME.into(),
             mkparents: true,
+        }.into(),
+    );
+    actions.push(
+        OS::Mkdir {
+            path: constants::ARCHIVE_FOLDER_NAME.into(),
         }.into(),
     );
 
@@ -42,7 +48,11 @@ pub fn make_archive(dir: &PathBuf) -> Action {
                 .join(constants::ARCHIVE_FOLDER_NAME)
                 .join(dir_copy.clone());
 
-            debug!("Check project_path ({}) and archive path ({})", project_path.display(), archive_path.display());
+            debug!(
+                "Check project_path ({}) and archive path ({})",
+                project_path.display(),
+                archive_path.display()
+            );
 
             is_valid_root(&context.path)?;
             is_valid_project_path(&project_path)?;
@@ -136,23 +146,36 @@ pub fn make_new(dest: &PathBuf, template: &Option<PathBuf>) -> Action {
     );
     actions.push(match template {
         None => Message::Info("no template given - skipping template generation".to_owned()).into(),
-        Some(template_path) => template::Template::make(template_path, dest).into(), 
+        Some(template_path) => template::Template::make(template_path, dest).into(),
     });
-
-
 
     Action::Group(actions)
 }
 
 fn is_valid_root(path: &PathBuf) -> Result<()> {
-     debug!("Ensure {} path is valid root", path.display());
+    debug!("Ensure {} path is valid root", path.display());
     if !path.join(constants::ARCHIVAR_FILE_NAME).exists() {
         bail!(
             "your selected path `{}` is not an archivar dir",
             path.display()
         );
     }
+    Ok(())
+}
 
+fn is_no_archivar_root(dir: &PathBuf) -> Result<()> {
+    let mut path: PathBuf = "/".into();
+    debug!("Ensure {} is not already an archivar path", dir.display());
+    for comp in dir.components() {
+        path = path.join(comp);
+        if path.join(constants::ARCHIVE_FOLDER_NAME).exists() {
+            bail!(
+                "`{}` is subdir of an archivar path `{}`",
+                dir.display(),
+                path.display()
+            );
+        }
+    }
     Ok(())
 }
 
