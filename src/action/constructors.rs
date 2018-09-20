@@ -146,14 +146,14 @@ pub fn make_new(dest: &PathBuf, template: &Option<PathBuf>) -> Action {
     );
     actions.push(match template {
         None => Message::Info("no template given - skipping template generation".to_owned()).into(),
-        Some(template_path) => template::Template::make(template_path, dest).into(), 
+        Some(template_path) => template::Template::make(template_path, dest).into(),
     });
 
     Action::Group(actions)
 }
 
 fn is_valid_root(path: &PathBuf) -> Result<()> {
-     debug!("Ensure {} path is valid root", path.display());
+    debug!("Ensure {} path is valid root", path.display());
     if !path.join(constants::ARCHIVAR_FILE_NAME).exists() {
         bail!(
             "your selected path `{}` is not an archivar dir",
