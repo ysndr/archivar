@@ -71,6 +71,9 @@ impl Template {
 }
 
 fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action> {
+
+    error!("{}", cwd.display());
+
     let mut actions: Vec<Action> = vec![];
 
     for action_str in init_lines.iter() {
@@ -97,7 +100,7 @@ fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
 fn make_include_actions(
     includes: &BTreeMap<PathBuf, Option<IncludeOptions>>,
     template_dir: &PathBuf,
-    cwd: &Path,
+    project_dir: &Path,
 ) -> Vec<Action> {
     let mut actions: Vec<Action> = vec![];
 
@@ -109,10 +112,17 @@ fn make_include_actions(
             path.to_owned()
         };
 
-        let to = match options {
-            Some(o) if o.dest.is_some() => cwd.join(o.dest.to_owned().unwrap()),
-            _ => cwd.join(Path::new(path.file_name().unwrap())),
-        };
+        let to = options.clone().and_then(|o| {
+            o.dest.map(|dest| {
+                let mut o_dir = project_dir.join(dest.to_owned());
+                
+                if dest.to_str().unwrap().ends_with('/') {
+                    o_dir = o_dir.join(from.file_name().unwrap());
+                }
+                o_dir
+            })
+        }).unwrap_or_else(|| project_dir.join(Path::new(from.file_name().unwrap())));
+        
 
         actions.push(Action::OS(OS::Copy { from, to }));
     }
@@ -148,7 +158,7 @@ impl TemplateConfig {
 
 
 pub fn canonicalize_template_path(template_path: &Path) -> (PathBuf, PathBuf) {
-    if template_path.file_name().unwrap() == TEMPLATE_FILE_NAME {
+    if template_path.is_file() {
             (template_path.to_owned(), template_path.parent().unwrap().to_owned())
     } else {
             let file = template_path.join(TEMPLATE_FILE_NAME);
@@ -156,7 +166,7 @@ pub fn canonicalize_template_path(template_path: &Path) -> (PathBuf, PathBuf) {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct IncludeOptions {
     dest: Option<PathBuf>,
     extract: Option<bool>,
