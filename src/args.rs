@@ -2,48 +2,52 @@ use std::path::PathBuf;
 
 #[derive(StructOpt, Debug, PartialEq, Clone)]
 pub enum Command {
-    #[structopt(name = "init")]
+    #[structopt(name = "init", about = "Initializes archivar")]
     Init,
     // archivar new path ..
-    #[structopt(name = "new")]
+    #[structopt(name = "new", about = "Creates new project")]
     New {
-        #[structopt(parse(from_os_str), help = "destination path")]
+        #[structopt(parse(from_os_str), help = "Destination path", )]
         dest: PathBuf,
 
-        #[structopt(parse(from_os_str), help = "template path")]
+        #[structopt(parse(from_os_str), help = "Template path")]
         template: Option<PathBuf>,
     },
 
-    #[structopt(name = "archive")]
+    #[structopt(name = "archive", about = "Archives project")]
     Archive {
-        #[structopt(parse(from_os_str), help = "target path")]
+        #[structopt(parse(from_os_str), help = "Target project path")]
         dir: PathBuf,
     },
 
-    #[structopt(name = "unarchive")]
+    #[structopt(name = "unarchive", about = "Restores project from archive")]
     Unarchive {
-        #[structopt(parse(from_os_str), help = "target path")]
+        #[structopt(parse(from_os_str), help = "Target project path")]
         dir: PathBuf,
     },
 }
 
 #[derive(StructOpt, Debug, Clone, PartialEq)]
-#[structopt(name = "archivar", about = "the trachkeeper of your stuff")]
+#[structopt(
+    raw(setting = "structopt::clap::AppSettings::ColoredHelp"),
+    name = "archivar",
+    about = "the trackkeeper of your stuff")]
 pub struct Args {
     #[structopt(
         short = "v",
         long = "verbosity",
         parse(from_occurrences),
-        help = "switch on verbosity"
+        help = "Switches on verbosity (increase verbosity by applying multiple times)",
     )]
     pub verbosity: usize,
 
-    #[structopt(help = "disable git integration", long = "no-git")]
+    #[structopt(help = "Disables git integration", long = "no-git")]
     pub git_disabled: bool,
 
     #[structopt(
         short = "p",
         long = "path",
+        help = "The basedir of the archive",
         default_value = ".",
         parse(from_os_str)
     )]
