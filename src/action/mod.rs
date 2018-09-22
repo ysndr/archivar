@@ -124,20 +124,17 @@ mod tests {
 
     use logger;
 
-   
-
-
-
     #[test]
     fn action_set_from_init_command() {
-        let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let archivar_file: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let archive_path: PathBuf = constants::ARCHIVE_FOLDER_NAME.into();
         let mkparents = true;
 
         let command = Command::Init;
         let expected = Action::Group(vec![
             check::Check::new(box |_| Ok(())).into(),
-            OS::Touch { path : path.clone(), mkparents }.into(),
-            OS::Mkdir { path : path.clone() }.into(),
+            OS::Touch { path : archivar_file.clone(), mkparents }.into(),
+            OS::Mkdir { path : archive_path.clone() }.into(),
         ]);
 
         assert_eq!(expected, Action::from(&command));
