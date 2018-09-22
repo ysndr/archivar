@@ -22,7 +22,6 @@ chrono = "0.4"
 
 error-chain = "0.12.0"
 
-shell = { path = "/home/ysander/Documents/projects/rust/shell" }
 
 serde = "1.0"
 serde_derive = "1.0"
@@ -32,6 +31,9 @@ predicates = "0.9"
 assert_fs = "0.9"
 
 fs_extra = "1.1.0"
+
+[dependencies.shell]
+git = "ssh://git@github.com/ysndr/shell-rs"
 
 [dev-dependencies]
 pretty_assertions = "0.5"
