@@ -10,9 +10,9 @@ use error::*;
 
 #[derive(Debug)]
 pub struct Context {
-    pub cwd: PathBuf,
-    pub path: PathBuf,
-    pub shell: RefCell<Shell>,
+    pub cwd: PathBuf,  // users cwd TODO: decide whether to keep or remove
+    pub path: PathBuf, // project root path
+    pub shell: RefCell<Shell>, // a global handle to a configured Shell instance
 }
 
 impl Context {
