@@ -79,13 +79,18 @@ impl ActionTrait for Action {
             // move files/folders
             Move { from, to } => {
                 info!("move ({} -> {})", from.display(), to.display());
-                fs::create_dir_all(root.join(to).parent().unwrap())?;
+                let from = root.join(from);
+                let to = root.join(to);
+
+                fs::create_dir_all(to.parent().unwrap())?;
                 if from.is_dir() {
-                    dir::move_dir(from,root.join(to), 
+                    dir::move_dir(from, to, 
                     &dir::CopyOptions {
                         copy_inside: true, 
                         .. dir::CopyOptions::new()})?;
-                } else { fs::rename(from, root.join(to))?; }
+                } else {
+                     fs::rename(from, to)?; 
+                }
             }
 
             // copy files/folders
