@@ -33,7 +33,7 @@ assert_fs = "0.9"
 fs_extra = "1.1.0"
 
 [dependencies.shell]
-git = "ssh://git@github.com/ysndr/shell-rs"
+git = "ssh://git@github.com:ysndr/shell-rs.git"
 
 [dev-dependencies]
 pretty_assertions = "0.5"
