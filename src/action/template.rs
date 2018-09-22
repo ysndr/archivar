@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn read_from_file() {
-        let config = TemplateConfig::from_file(&PathBuf::from("test/.template.yaml")).unwrap();
+        let config = TemplateConfig::from_file(&PathBuf::from("tests/setups/templates/parse.yaml")).unwrap();
 
         assert_eq!(config.include.unwrap().len(), 6);
         assert_eq!(config.init.unwrap().len(), 2);
