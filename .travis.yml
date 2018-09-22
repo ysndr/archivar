@@ -7,6 +7,13 @@ rust:
 matrix:
   allow_failures:
     - rust: stable
+    - rust: beta
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+notifications:
+  email:
+    recipients:
+      - notifications@ysndr.de
+    on_success: change # default: change
+    on_failure: always # default: always
