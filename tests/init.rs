@@ -5,6 +5,7 @@ extern crate predicates;
 extern crate log;
 
 use libarchivar::app::Archivar as App;
+use libarchivar::app::{Args, Command};
 
 use assert_fs::prelude::*;
 
@@ -19,10 +20,17 @@ use utils::*;
 fn test_init_ok() {
     logger::setup_logger(logger::level_from_verbosity(3)).unwrap();
 
-    // setuo
+    // setup
     let temp = assert_fs::TempDir::new().unwrap();
-    let args = make_args("init", &["-p", temp.path().to_str().unwrap()], &[]);
-    let app = App::new(args);
+    let sub = Command::Init;
+    let args = Args {
+        verbosity : 3,
+        git_disabled: false,
+        path: temp.path().to_owned(),
+        sub: sub.clone(),
+    };
+    
+    let app = App::new(sub,  App::setup_context(&args));
 
     // run
     app.run().unwrap();
@@ -42,8 +50,15 @@ fn test_init_fail_if_exists() {
 
     // setuo
     let temp = assert_fs::TempDir::new().unwrap();
-    let args = make_args("init", &["-p", temp.path().to_str().unwrap()], &[]);
-    let app = App::new(args);
+    let sub = Command::Init;    
+    let args = Args {
+        verbosity : 3,
+        git_disabled: false,
+        path: temp.path().to_owned(),
+        sub: sub.clone(),
+    };
+    
+    let app = App::new(sub,  App::setup_context(&args));
     
 
     // run

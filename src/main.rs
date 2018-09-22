@@ -23,7 +23,9 @@ fn main() {
     let level = logger::level_from_verbosity(args.verbosity);
     logger::setup_logger(level).expect("could not set logger");
 
-    let app = App::new(args);
+    let context = App::setup_context(&args);
+
+    let app = App::new(args.sub, context);
 
     if let Err(e) = run(&app) {
         let mut mapp = app;

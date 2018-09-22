@@ -28,7 +28,14 @@ pub struct Archivar {
 }
 
 impl Archivar {
-    pub fn new(args: Args) -> Self {
+    pub fn new(command: Command, context: Context) -> Self {
+        Archivar {
+            command,
+            context,
+        }
+    }
+
+    pub fn setup_context(args: &Args) -> Context {
         let mut shell = Shell::new();
         shell.set_verbosity(match args.verbosity {
             0 => Verbosity::Normal,
@@ -38,15 +45,10 @@ impl Archivar {
 
         let cwd = env::current_dir().expect("couldn't get the current directory of the process");
 
-        let context = Context {
+        Context {
             cwd,
-            path: args.path,
+            path: args.path.clone(),
             shell: RefCell::new(shell),
-        };
-
-        Archivar {
-            command: args.sub,
-            context,
         }
     }
 
@@ -67,14 +69,18 @@ mod tests {
     #[test]
     fn args_to_app() {
        
+        let sub = Command::Init;
+
         let args = Args {
             verbosity: 0,
             git_disabled: false,
             path: PathBuf::from("."),
-            sub: Command::Init,
+            sub: sub.clone(),
         };
 
-        let app = Archivar::new(args);
+
+
+        let app = Archivar::new(sub, Archivar::setup_context(&args));
         
         assert_eq!(app.command, Command::Init);
         assert_eq!(app.context.path, PathBuf::from("."))

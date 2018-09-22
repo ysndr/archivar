@@ -27,7 +27,7 @@ pub enum Command {
     },
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone, PartialEq)]
 #[structopt(name = "archivar", about = "the trachkeeper of your stuff")]
 pub struct Args {
     #[structopt(
