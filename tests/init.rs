@@ -63,7 +63,7 @@ fn test_init_fail_if_exists() {
 
     // run
     app.run().unwrap();
-    app.run().unwrap(); // same arguments = directory shuld already exist now  
+    assert!(app.run().is_err()); // same arguments = directory shuld already exist now  
 
     // test
     temp.child(".archivar").assert(predicates::path::is_file());
