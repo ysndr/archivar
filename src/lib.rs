@@ -30,6 +30,6 @@ extern crate fs_extra;
 mod action;
 pub mod app;
 mod args;
-mod constants;
+pub mod constants;
 pub mod error;
 pub mod logger;
