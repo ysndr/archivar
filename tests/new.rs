@@ -1,12 +1,11 @@
 extern crate assert_fs;
-extern crate libarchivar;
+extern crate archivar;
 extern crate log;
 extern crate predicates;
 extern crate pretty_assertions;
 
-use libarchivar::app::Archivar as App;
-use libarchivar::app::{Args, Command};
-use std::env::current_dir;
+use archivar::app::Archivar as App;
+use archivar::app::{Args, Command};
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
@@ -15,11 +14,11 @@ use assert_fs::prelude::*;
 
 mod utils;
 
-use libarchivar::logger;
+use archivar::logger;
 
 use utils::cwd;
 
-fn setup(template: PathBuf) -> (assert_fs::TempDir, libarchivar::app::Archivar) {
+fn setup(template: PathBuf) -> (assert_fs::TempDir, archivar::app::Archivar) {
     logger::setup_logger(logger::level_from_verbosity(3)).unwrap_or(());
     // setuo
     let temp = assert_fs::TempDir::new().unwrap();

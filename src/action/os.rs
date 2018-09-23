@@ -1,7 +1,7 @@
 use action::ActionTrait;
 use app;
 use error::*;
-use fs_extra::{dir, file};
+use fs_extra::dir;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;

@@ -1,5 +1,5 @@
 extern crate assert_fs;
-extern crate libarchivar;
+extern crate archivar;
 extern crate log;
 extern crate predicates;
 extern crate pretty_assertions;
@@ -7,30 +7,24 @@ extern crate shell;
 
 use assert_fs::assert::IntoPathPredicate;
 use assert_fs::TempDir;
-use libarchivar::app::Archivar as App;
-use libarchivar::app::Context;
-use libarchivar::app::{Args, Command};
-use libarchivar::constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
-use std::cell::{RefCell, RefMut};
-use std::env::current_dir;
-use std::fs::File;
-use std::io::Read;
-use std::path::PathBuf;
+use archivar::app::Archivar as App;
+use archivar::app::Context;
+use archivar::app::Command;
+use archivar::constants::ARCHIVE_FOLDER_NAME;
+use std::cell::RefCell;
 
 use assert_fs::prelude::*;
 
 mod utils;
 
-use libarchivar::logger;
+use archivar::logger;
 
 use utils::cwd;
 
-fn setup(
-    template: PathBuf,
-) -> (
+fn setup() -> (
     assert_fs::TempDir,
-    libarchivar::app::Archivar,
-    libarchivar::app::Archivar,
+    archivar::app::Archivar,
+    archivar::app::Archivar,
 ) {
     logger::setup_logger(logger::level_from_verbosity(3)).unwrap_or(());
     // setup
@@ -60,7 +54,7 @@ fn get_context(temp: &TempDir) -> Context {
 
 #[test]
 fn test_template_archive_unarchive() {
-    let (temp, archive, unarchive) = setup("tests/setups/templates/includes.yaml".into());
+    let (temp, archive, unarchive) = setup();
 
     // run
     archive.run().expect("Archive failed");

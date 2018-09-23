@@ -1,11 +1,7 @@
 use super::app;
 use args::Command;
-use constants::*;
 use error::*;
-use predicates::prelude::*;
-use std::path::PathBuf;
 
-use constants;
 
 // use template::Template;
 
@@ -85,15 +81,13 @@ impl From<Command> for Action {
             Command::Archive { dir } => constructors::make_archive(&dir),
             Command::Unarchive { dir } => constructors::make_unarchive(&dir),
             Command::New { dest, template } => constructors::make_new(&dest, &template),
-
-            _ => Action::Noop,
         }
     }
 }
 
 #[derive(Debug)]
 #[cfg(test)]
-struct Wildcard;
+pub struct Wildcard;
 #[cfg(test)]
 impl ActionTrait for Wildcard {
     fn run<'a>(&self, _context: &'a app::Context) -> Result<()> {
@@ -115,17 +109,16 @@ impl From<Wildcard> for Action {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::path::PathBuf;
     use assert_fs::prelude::*;
-    use assert_fs::*;
-    use predicates::prelude::*;
-
+    use super::*;
+    use constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
     use logger;
 
     #[test]
     fn action_set_from_init_command() {
-        let archivar_file: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
-        let archive_path: PathBuf = constants::ARCHIVE_FOLDER_NAME.into();
+        let archivar_file: PathBuf = ARCHIVAR_FILE_NAME.into();
+        let archive_path: PathBuf = ARCHIVE_FOLDER_NAME.into();
         let mkparents = true;
 
         let command = Command::Init;
@@ -145,9 +138,9 @@ mod tests {
 
     #[test]
     fn action_set_from_archive_command() {
-        let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let path: PathBuf = ARCHIVAR_FILE_NAME.into();
         let example_project: PathBuf = "examples/project".into();
-        let archive_path = PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&example_project);
+        let archive_path = PathBuf::from(ARCHIVE_FOLDER_NAME).join(&example_project);
 
         let command = Command::Archive {
             dir: example_project.clone(),
@@ -164,9 +157,9 @@ mod tests {
 
     #[test]
     fn action_set_from_unarchive_command() {
-        let path: PathBuf = constants::ARCHIVAR_FILE_NAME.into();
+        let path: PathBuf = ARCHIVAR_FILE_NAME.into();
         let example_project: PathBuf = "examples/project".into();
-        let archive_path = PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&example_project);
+        let archive_path = PathBuf::from(ARCHIVE_FOLDER_NAME).join(&example_project);
 
         let command = Command::Unarchive {
             dir: example_project.clone(),
@@ -193,7 +186,7 @@ mod tests {
         let expected = Action::Group(vec![
             check::Check::new(box |_| Ok(())).into(),
             OS::Touch {
-                path: example_project.join(constants::PROJECT_FILE_NAME),
+                path: example_project.join(PROJECT_FILE_NAME),
                 mkparents: true,
             }.into(),
             Message::Info("".to_owned()).into(),

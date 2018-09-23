@@ -1,5 +1,5 @@
-use super::{Action, ActionTrait, Check, Fail};
-use constants::{GITKEEP_FILE_NAME, TEMPLATE_FILE_NAME};
+use super::{Action, ActionTrait, Fail};
+use constants::TEMPLATE_FILE_NAME;
 use error::*;
 use serde_yaml;
 use std::collections::BTreeMap;
@@ -7,11 +7,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::{fs, io};
 
-use log;
-
 use app;
 
-use super::Message;
 use super::OS;
 
 #[derive(Debug, PartialEq)]
@@ -191,7 +188,6 @@ mod tests {
 
     #[test]
     fn creates_actions() {
-        let now = ::std::time::SystemTime::now();
         let mut temp_dir = ::std::env::temp_dir();
         temp_dir.push("archivar-test");
 

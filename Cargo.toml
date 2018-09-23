@@ -3,15 +3,6 @@ name = "archivar"
 version = "0.1.0"
 authors = ["Yannik Sander <me@ysndr.de>"]
 
-
-[lib]
-name = "libarchivar"
-path = "src/lib.rs"
-
-[[bin]]
-name = "archivar"
-path = "src/main.rs"
-
 [dependencies]
 structopt = "0.2"
 
@@ -21,7 +12,6 @@ fern = "0.5"
 chrono = "0.4"
 
 error-chain = "0.12.0"
-
 
 serde = "1.0"
 serde_derive = "1.0"

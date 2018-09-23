@@ -1,8 +1,6 @@
 use super::{check, template, Action, Message, OS};
-use app;
 use args::Command;
 use error::*;
-use predicates::prelude::*;
 
 use constants;
 use std::path::PathBuf;

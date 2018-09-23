@@ -1,19 +1,17 @@
 extern crate assert_fs;
-extern crate libarchivar;
+extern crate archivar;
 extern crate log;
 extern crate predicates;
 extern crate pretty_assertions;
 
-use libarchivar::app::Archivar as App;
-use libarchivar::app::{Args, Command};
+use archivar::app::Archivar as App;
+use archivar::app::{Args, Command};
 
 use assert_fs::prelude::*;
 
 mod utils;
 
-use libarchivar::logger;
-
-use utils::*;
+use archivar::logger;
 
 #[test]
 fn test_init_ok() {

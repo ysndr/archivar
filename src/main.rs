@@ -5,16 +5,16 @@ extern crate chrono;
 extern crate fern;
 extern crate log;
 
-extern crate libarchivar;
+extern crate archivar;
 
 // mod template;
 
 mod logger;
 
-use libarchivar::app::Archivar as App;
-use libarchivar::app::Args;
-use libarchivar::error::*;
-use libarchivar::structopt::*;
+use archivar::app::Archivar as App;
+use archivar::app::Args;
+use archivar::error::*;
+use archivar::structopt::*;
 
 fn main() {
     let args = Args::from_args();
