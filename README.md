@@ -54,3 +54,7 @@ the directory clean using an archive.
 You can still install `archivar` by running
 
     $ cargo install --git https://github.com/ysndr/archivar
+
+## License
+
+Licensed under the [MIT License](LICENSE-MIT).
