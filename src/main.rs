@@ -1,71 +1,38 @@
+#[cfg(test)]
 #[macro_use]
-extern crate slog;
-extern crate slog_async;
-extern crate slog_term;
+extern crate pretty_assertions;
+extern crate chrono;
+extern crate fern;
+extern crate log;
 
-extern crate shell;
+extern crate libarchivar;
 
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_yaml;
+// mod template;
 
-#[macro_use]
-extern crate clap;
-
-#[macro_use]
-extern crate error_chain;
-
-mod action;
-mod app;
-mod command;
-mod constants;
-mod error;
 mod logger;
-mod template;
 
-use app::Archivar as App;
-use action::ActionSet;
-use app::Config;
-use command::Command;
-use error::*;
-use logger::Logger;
-use shell::Shell;
+use libarchivar::app::Archivar as App;
+use libarchivar::app::Args;
+use libarchivar::error::*;
+use libarchivar::structopt::*;
 
 fn main() {
-    if let Err(e) = run() {
-        match *e.kind() {
-            ErrorKind::Clap(_) => crit!(Logger::default(), "{}", e),
-            _ => {
-                crit!(Logger::default(), "error: {}", e);
-                for e in e.iter().skip(1) {
-                    crit!(Logger::default(), "caused by: {}", e);
-                }
+    let args = Args::from_args();
 
-                // The backtrace is not always generated. Try to run this example
-                // with `RUST_BACKTRACE=1`.
-                if let Some(backtrace) = e.backtrace() {
-                    crit!(Logger::default(), "backtrace: {:?}", backtrace);
-                }
-            }
-        }
+    let level = logger::level_from_verbosity(args.verbosity);
+    logger::setup_logger(level).expect("could not set logger");
+
+    let context = App::setup_context(&args);
+
+    let app = App::new(args.sub, context);
+
+    if let Err(e) = run(&app) {
+        let mut mapp = app;
+        mapp.context.shell().error(e).is_ok();
     }
 }
 
-fn run() -> Result<()> {
-    let (log_level, matches) = app::parse_args()?;
-
-    let log = Logger::new(log_level);
-    let shell = Shell::new();
-    let command = Command::from_matches(&matches, &log)?;
-
-    println!("got command {:?}", command);
-    let cwd = std::env::current_dir().unwrap();
-    let config = Config::new(&log, &shell, cwd.as_path());
-
-    let app = App::new(config);
-    let actions = app.make_actions(&command)?;
-
-    app.execute(&*actions)
-
+fn run(app: &App) -> Result<()> {
+    app.shell().info(format!("{:?}", app)).unwrap();
+    app.run()
 }

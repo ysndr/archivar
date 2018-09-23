@@ -10,14 +10,15 @@ error_chain! {
             description("invalid command")
             display("invalid command ({}) issued", command)
         }
+        Template
 
 
     }
 
     foreign_links {
         Shell(::shell::errors::Error);
-        Clap(::clap::Error);
         Io(::std::io::Error);
+        FsExtra(::fs_extra::error::Error);
         SerdeYaml(::serde_yaml::Error);
     }
 

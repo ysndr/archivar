@@ -1,184 +1,82 @@
-use action::Actionable;
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use shell::{ColorChoice, Shell, Verbosity};
-use std::path::Path;
+use shell::{Shell, Verbosity};
+use std::cell::{RefCell, RefMut};
+use std::env;
+use std::path::PathBuf;
 
-use action::ActionSet;
-use command::Command;
+use action::*;
+pub use args::{Args, Command};
 use error::*;
-use logger::Logger;
 
 #[derive(Debug)]
-pub struct Config<'a> {
-    pub log: &'a Logger,
-    pub shell: &'a Shell,
-    pub cwd: &'a Path,
-
-    pub git: bool,
+pub struct Context {
+    pub cwd: PathBuf,          // users cwd TODO: decide whether to keep or remove
+    pub path: PathBuf,         // project root path
+    pub shell: RefCell<Shell>, // a global handle to a configured Shell instance
 }
 
-impl<'a> Config<'a> {
-    pub fn new(log: &'a Logger, shell: &'a Shell, cwd: &'a Path) -> Self {
-        Self {
-            log,
-            shell,
+impl Context {
+    pub fn shell(&self) -> RefMut<Shell> {
+        self.shell.borrow_mut()
+    }
+}
+
+#[derive(Debug)]
+pub struct Archivar {
+    command: Command,
+    pub context: Context,
+}
+
+impl Archivar {
+    pub fn new(command: Command, context: Context) -> Self {
+        Archivar { command, context }
+    }
+
+    pub fn setup_context(args: &Args) -> Context {
+        let mut shell = Shell::new();
+        shell.set_verbosity(match args.verbosity {
+            0 => Verbosity::Normal,
+            1 => Verbosity::Normal,
+            _ => Verbosity::Verbose,
+        });
+
+        let cwd = env::current_dir().expect("couldn't get the current directory of the process");
+
+        Context {
             cwd,
-            git: false,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Archivar<'a> {
-    config: Config<'a>,
-}
-
-impl<'a> Archivar<'a> {
-    pub fn new(config: Config<'a>) -> Self {
-        Self {
-            config,
+            path: args.path.clone(),
+            shell: RefCell::new(shell),
         }
     }
 
-    pub fn make_actions(&self, command: &Command) -> Result<Box<ActionSet>> {
-        let result = command.to_actions(&self.config);
-
-        match result {
-            Ok(actions) => {
-                debug!(self.config.log, "`make_actions` was ok"; "actions" => ?actions);
-                Ok(Box::new(actions))
-            }
-            Err(e) => bail!(e),
-        }
+    pub fn shell(&self) -> RefMut<Shell> {
+        self.context.shell()
     }
 
-    pub fn execute(&self, actions: &ActionSet) -> Result<()> {
-        unimplemented!()
+    pub fn run(&self) -> Result<()> {
+        debug!("start");
+        let action: Action = self.command.clone().into();
+        action.run(&self.context)
     }
-
-    fn handle_error(&self, e: Error) {}
 }
 
-pub fn parse_args<'a>() -> Result<(u64, ArgMatches<'a>)> {
-    App::new("Archivar")
-        .version(crate_version!())
-        .author("Yannik Sander <me@ysndr.de>")
-        .about("Tool to archive projects")
-        .arg(
-            Arg::with_name("VERBOSITY")
-                .takes_value(false)
-                .short("v")
-                .multiple(true),
-        )
-        .subcommand(
-            SubCommand::with_name("init")
-                .about("command to execute")
-                .arg(
-                    Arg::with_name("PATH")
-                        .required(false)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("GIT_DISABLED")
-                        .help("disable git")
-                        .long("no-git")
-                        .required(false)
-                        .takes_value(false),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("new")
-                .about("create new project")
-                .arg(
-                    Arg::with_name("PATH")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("ARCHIVAR_ROOT")
-                        .help("override root dir")
-                        .short("d")
-                        .long("dir")
-                        .required(false)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("TEMPLATE")
-                        .help("template to use")
-                        .short("t")
-                        .long("template")
-                        .required(false)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("TEMPLATE_ARGS")
-                        .required(false)
-                        .multiple(true),
-                )
-                .arg(
-                    Arg::with_name("NO_COMMIT")
-                        .help("inhibit git commit")
-                        .long("no-commit")
-                        .required(false)
-                        .takes_value(false),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("archive")
-                .about("archive project")
-                .arg(
-                    Arg::with_name("PATH")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("ARCHIVAR_ROOT")
-                        .help("override root dir")
-                        .short("d")
-                        .long("dir")
-                        .required(false)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("NO_COMMIT")
-                        .help("inhibit git commit")
-                        .long("no-commit")
-                        .required(false)
-                        .takes_value(false),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("unarchive")
-                .about("unarchive project")
-                .arg(
-                    Arg::with_name("PATH")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("ARCHIVAR_ROOT")
-                        .help("override root dir")
-                        .short("d")
-                        .long("dir")
-                        .required(false)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("NO_COMMIT")
-                        .help("inhibit git commit")
-                        .long("no-commit")
-                        .required(false)
-                        .takes_value(false),
-                ),
-        )
-        .setting(AppSettings::ColorAuto)
-        .setting(AppSettings::StrictUtf8)
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .get_matches_safe()
-        .and_then(|matches| Ok((matches.occurrences_of("VERBOSITY"), matches)))
-        .or_else(|e| Err(ErrorKind::Clap(e).into()))
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn args_to_app() {
+        let sub = Command::Init;
+
+        let args = Args {
+            verbosity: 0,
+            git_disabled: false,
+            path: PathBuf::from("."),
+            sub: sub.clone(),
+        };
+
+        let app = Archivar::new(sub, Archivar::setup_context(&args));
+
+        assert_eq!(app.command, Command::Init);
+        assert_eq!(app.context.path, PathBuf::from("."))
+    }
+
 }

@@ -1,0 +1,5 @@
+---
+init:
+  - mkdir test # simple command
+  - echo $PWD > pwd.txt # rewrite output of command and variables
+...
