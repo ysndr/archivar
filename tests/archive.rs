@@ -33,7 +33,7 @@ fn setup(
     libarchivar::app::Archivar,
 ) {
     logger::setup_logger(logger::level_from_verbosity(3)).unwrap_or(());
-    // setuo
+    // setup
     let temp = assert_fs::TempDir::new().unwrap();
 
     temp.copy_from(cwd().join("tests/setups/example"), &["*"])
