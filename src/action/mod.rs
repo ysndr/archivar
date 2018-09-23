@@ -20,7 +20,6 @@ use self::check::Fail;
 use self::message::Action as Message;
 use self::os::Action as OS;
 
-
 pub trait ActionTrait {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()>;
 }
@@ -36,9 +35,8 @@ pub enum Action {
     Fail(Fail),
     Noop,
     #[cfg(test)]
-    Wildcard(Wildcard)
+    Wildcard(Wildcard),
 }
-
 
 impl ActionTrait for Action {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
@@ -54,12 +52,15 @@ impl ActionTrait for Action {
             Action::Group(list) => {
                 let elems = list.len();
 
-                context.shell().info(format!("Running {} actions...", elems))?;
+                context
+                    .shell()
+                    .info(format!("Running {} actions...", elems))?;
                 debug!("Group: {:?}", list);
 
-
                 for (cur, action) in list.iter().enumerate() {
-                    context.shell().info(format!("Running action {} of {}", cur +1, elems))?;
+                    context
+                        .shell()
+                        .info(format!("Running action {} of {}", cur + 1, elems))?;
                     action.run(context)?;
                 }
                 context.shell().info("Done!")?;
@@ -90,7 +91,6 @@ impl From<Command> for Action {
     }
 }
 
-
 #[derive(Debug)]
 #[cfg(test)]
 struct Wildcard;
@@ -108,12 +108,10 @@ impl<T: ActionTrait> PartialEq<T> for Wildcard {
 }
 #[cfg(test)]
 impl From<Wildcard> for Action {
-    fn from(_:  Wildcard) -> Action {
+    fn from(_: Wildcard) -> Action {
         Action::Wildcard(Wildcard)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -133,8 +131,13 @@ mod tests {
         let command = Command::Init;
         let expected = Action::Group(vec![
             check::Check::new(box |_| Ok(())).into(),
-            OS::Touch { path : archivar_file.clone(), mkparents }.into(),
-            OS::Mkdir { path : archive_path.clone() }.into(),
+            OS::Touch {
+                path: archivar_file.clone(),
+                mkparents,
+            }.into(),
+            OS::Mkdir {
+                path: archive_path.clone(),
+            }.into(),
         ]);
 
         assert_eq!(expected, Action::from(&command));
@@ -204,10 +207,10 @@ mod tests {
 
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("example", &["*"]).unwrap();
-        
+
         let example_project: PathBuf = temp.path().join("archivar/project");
         let template_file: PathBuf = temp.path().to_owned();
-        
+
         let result_A = Action::from(Command::New {
             dest: example_project.clone(),
             template: Option::Some(template_file.clone()),
@@ -217,6 +220,5 @@ mod tests {
 
         temp.close().unwrap();
     }
-
 
 }

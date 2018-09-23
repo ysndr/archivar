@@ -1,7 +1,7 @@
 use action::ActionTrait;
 use app;
 use error::*;
-use fs_extra::{file, dir};
+use fs_extra::{dir, file};
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -71,11 +71,11 @@ impl ActionTrait for Action {
             Touch { path, mkparents } => {
                 info!("touch ({})", path.display());
                 if *mkparents {
-                     fs::create_dir_all(root.join(path).parent().unwrap())?;
+                    fs::create_dir_all(root.join(path).parent().unwrap())?;
                 }
                 fs::File::create(root.join(path))?;
             }
-            
+
             // move files/folders
             Move { from, to } => {
                 info!("move ({} -> {})", from.display(), to.display());
@@ -84,12 +84,16 @@ impl ActionTrait for Action {
 
                 fs::create_dir_all(to.parent().unwrap())?;
                 if from.is_dir() {
-                    dir::move_dir(from, to, 
-                    &dir::CopyOptions {
-                        copy_inside: true, 
-                        .. dir::CopyOptions::new()})?;
+                    dir::move_dir(
+                        from,
+                        to,
+                        &dir::CopyOptions {
+                            copy_inside: true,
+                            ..dir::CopyOptions::new()
+                        },
+                    )?;
                 } else {
-                     fs::rename(from, to)?; 
+                    fs::rename(from, to)?;
                 }
             }
 
@@ -102,9 +106,13 @@ impl ActionTrait for Action {
                         from,
                         root.join(to),
                         &dir::CopyOptions {
-                            copy_inside: true, 
-                            .. dir::CopyOptions::new()})?;
-                } else { fs::copy(from, root.join(to))?; }
+                            copy_inside: true,
+                            ..dir::CopyOptions::new()
+                        },
+                    )?;
+                } else {
+                    fs::copy(from, root.join(to))?;
+                }
             }
 
             // chmod files/folders
@@ -122,7 +130,6 @@ impl ActionTrait for Action {
 
             // run shell commands
             Shell { command, cwd } => {
-                                    
                 let mut base = Command::new("sh");
 
                 let process = base.arg("-c").arg(command);
@@ -131,18 +138,19 @@ impl ActionTrait for Action {
                     let cwd = root.join(cwd);
                     error!("{}", cwd.display());
                     process.current_dir(cwd)
-
-                } else { process };
-
+                } else {
+                    process
+                };
 
                 shell.info(format!("command: `{}`", command)).unwrap();
 
                 let status = process.status()?;
 
-                shell.info(match status.code() {
-                    Some(code) => format!("command exited with status code: {}", code),
-                    None => "command terminated by signal".to_string(),
-                }).unwrap();
+                shell
+                    .info(match status.code() {
+                        Some(code) => format!("command exited with status code: {}", code),
+                        None => "command terminated by signal".to_string(),
+                    }).unwrap();
             }
         };
 
