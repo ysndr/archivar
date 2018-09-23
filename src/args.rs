@@ -7,7 +7,7 @@ pub enum Command {
     // archivar new path ..
     #[structopt(name = "new", about = "Creates new project")]
     New {
-        #[structopt(parse(from_os_str), help = "Destination path", )]
+        #[structopt(parse(from_os_str), help = "Destination path",)]
         dest: PathBuf,
 
         #[structopt(parse(from_os_str), help = "Template path")]
@@ -31,7 +31,8 @@ pub enum Command {
 #[structopt(
     raw(setting = "structopt::clap::AppSettings::ColoredHelp"),
     name = "archivar",
-    about = "the trackkeeper of your stuff")]
+    about = "the trackkeeper of your stuff"
+)]
 pub struct Args {
     #[structopt(
         short = "v",

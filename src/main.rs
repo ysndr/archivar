@@ -1,16 +1,15 @@
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
-extern crate log;
-extern crate fern;
 extern crate chrono;
+extern crate fern;
+extern crate log;
 
 extern crate libarchivar;
 
 // mod template;
 
 mod logger;
-
 
 use libarchivar::app::Archivar as App;
 use libarchivar::app::Args;

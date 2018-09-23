@@ -1,6 +1,6 @@
-use log;
 use chrono;
 use fern;
+use log;
 
 pub fn setup_logger(level: log::LevelFilter) -> Result<(), fern::InitError> {
     fern::Dispatch::new()
@@ -12,16 +12,11 @@ pub fn setup_logger(level: log::LevelFilter) -> Result<(), fern::InitError> {
                 record.level(),
                 message
             ))
-        })
-        .level(level)
+        }).level(level)
         .chain(::std::io::stdout())
         .apply()?;
     Ok(())
 }
-
-
-
-
 
 pub fn level_from_verbosity(verbosity: usize) -> log::LevelFilter {
     match verbosity {

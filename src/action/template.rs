@@ -71,7 +71,6 @@ impl Template {
 }
 
 fn make_init_command_actions(init_lines: &Vec<String>, cwd: &Path) -> Vec<Action> {
-
     error!("{}", cwd.display());
 
     let mut actions: Vec<Action> = vec![];
@@ -112,17 +111,18 @@ fn make_include_actions(
             path.to_owned()
         };
 
-        let to = options.clone().and_then(|o| {
-            o.dest.map(|dest| {
-                let mut o_dir = project_dir.join(dest.to_owned());
-                
-                if dest.to_str().unwrap().ends_with('/') {
-                    o_dir = o_dir.join(from.file_name().unwrap());
-                }
-                o_dir
-            })
-        }).unwrap_or_else(|| project_dir.join(Path::new(from.file_name().unwrap())));
-        
+        let to = options
+            .clone()
+            .and_then(|o| {
+                o.dest.map(|dest| {
+                    let mut o_dir = project_dir.join(dest.to_owned());
+
+                    if dest.to_str().unwrap().ends_with('/') {
+                        o_dir = o_dir.join(from.file_name().unwrap());
+                    }
+                    o_dir
+                })
+            }).unwrap_or_else(|| project_dir.join(Path::new(from.file_name().unwrap())));
 
         actions.push(Action::OS(OS::Copy { from, to }));
     }
@@ -156,13 +156,15 @@ impl TemplateConfig {
     }
 }
 
-
 pub fn canonicalize_template_path(template_path: &Path) -> (PathBuf, PathBuf) {
     if template_path.is_file() {
-            (template_path.to_owned(), template_path.parent().unwrap().to_owned())
+        (
+            template_path.to_owned(),
+            template_path.parent().unwrap().to_owned(),
+        )
     } else {
-            let file = template_path.join(TEMPLATE_FILE_NAME);
-            (file, template_path.to_owned())
+        let file = template_path.join(TEMPLATE_FILE_NAME);
+        (file, template_path.to_owned())
     }
 }
 
@@ -179,7 +181,8 @@ mod tests {
 
     #[test]
     fn read_from_file() {
-        let config = TemplateConfig::from_file(&PathBuf::from("tests/setups/templates/parse.yaml")).unwrap();
+        let config =
+            TemplateConfig::from_file(&PathBuf::from("tests/setups/templates/parse.yaml")).unwrap();
 
         assert_eq!(config.include.unwrap().len(), 6);
         assert_eq!(config.init.unwrap().len(), 2);

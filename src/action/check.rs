@@ -57,7 +57,7 @@ impl PartialEq for Fail {
 
 impl ActionTrait for Fail {
     fn run<'a>(&self, _context: &'a app::Context) -> Result<()> {
-       Err(self.0.clone().into())
+        Err(self.0.clone().into())
     }
 }
 
