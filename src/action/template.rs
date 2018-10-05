@@ -1,13 +1,13 @@
 use super::{Action, ActionTrait, Fail};
-use constants::TEMPLATE_FILE_NAME;
-use error::*;
+use crate::constants::TEMPLATE_FILE_NAME;
+use crate::error::*;
 use serde_yaml;
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 use std::{fs, io};
 
-use app;
+use crate::app;
 
 use super::OS;
 

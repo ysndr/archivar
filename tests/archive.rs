@@ -19,7 +19,7 @@ mod utils;
 
 use archivar::logger;
 
-use utils::cwd;
+use crate::utils::cwd;
 
 fn setup() -> (
     assert_fs::TempDir,

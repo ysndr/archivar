@@ -1,6 +1,6 @@
 use super::app;
-use args::Command;
-use error::*;
+use crate::args::Command;
+use crate::error::*;
 
 
 // use template::Template;
@@ -112,8 +112,8 @@ mod tests {
     use std::path::PathBuf;
     use assert_fs::prelude::*;
     use super::*;
-    use constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
-    use logger;
+    use crate::constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
+    use crate::logger;
 
     #[test]
     fn action_set_from_init_command() {
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn action_set_from_archive_command() {
-        let path: PathBuf = ARCHIVAR_FILE_NAME.into();
+        let _path: PathBuf = ARCHIVAR_FILE_NAME.into();
         let example_project: PathBuf = "examples/project".into();
         let archive_path = PathBuf::from(ARCHIVE_FOLDER_NAME).join(&example_project);
 
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn action_set_from_unarchive_command() {
-        let path: PathBuf = ARCHIVAR_FILE_NAME.into();
+        let _path: PathBuf = ARCHIVAR_FILE_NAME.into();
         let example_project: PathBuf = "examples/project".into();
         let archive_path = PathBuf::from(ARCHIVE_FOLDER_NAME).join(&example_project);
 

@@ -1,8 +1,8 @@
 use super::{check, template, Action, Message, OS};
-use args::Command;
-use error::*;
+use crate::args::Command;
+use crate::error::*;
 
-use constants;
+use crate::constants;
 use std::path::PathBuf;
 
 pub fn make_init(_command: &Command) -> Action {

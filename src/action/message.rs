@@ -1,6 +1,6 @@
 use super::ActionTrait;
-use app;
-use error::*;
+use crate::app;
+use crate::error::*;
 
 #[derive(Debug)]
 pub enum Action {

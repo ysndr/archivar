@@ -3,9 +3,9 @@ use std::cell::{RefCell, RefMut};
 use std::env;
 use std::path::PathBuf;
 
-use action::*;
-pub use args::{Args, Command};
-use error::*;
+use crate::action::*;
+pub use crate::args::{Args, Command};
+use crate::error::*;
 
 #[derive(Debug)]
 pub struct Context {
