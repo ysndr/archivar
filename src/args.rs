@@ -1,30 +1,20 @@
 use std::path::PathBuf;
+use crate::commands;
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, PartialEq, Clone)]
 pub enum Command {
     #[structopt(name = "init", about = "Initializes archivar")]
-    Init,
+    Init(commands::init::Init),
     // archivar new path ..
     #[structopt(name = "new", about = "Creates new project")]
-    New {
-        #[structopt(parse(from_os_str), help = "Destination path")]
-        dest: PathBuf,
-
-        #[structopt(parse(from_os_str), help = "Template path")]
-        template: Option<PathBuf>,
-    },
+    New (commands::new::New),
 
     #[structopt(name = "archive", about = "Archives project")]
-    Archive {
-        #[structopt(parse(from_os_str), help = "Target project path")]
-        dir: PathBuf,
-    },
+    Archive (commands::archive::Archive),
 
     #[structopt(name = "unarchive", about = "Restores project from archive")]
-    Unarchive {
-        #[structopt(parse(from_os_str), help = "Target project path")]
-        dir: PathBuf,
-    },
+    Unarchive (commands::unarchive::Unarchive)
 }
 
 #[derive(StructOpt, Debug, Clone, PartialEq)]

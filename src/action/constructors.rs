@@ -2,6 +2,8 @@ use super::{check, template, Action, Message, OS};
 use crate::args::Command;
 use crate::error::*;
 
+use log::*;
+
 use crate::constants;
 use std::path::PathBuf;
 

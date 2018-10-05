@@ -2,6 +2,7 @@ use super::app;
 use crate::args::Command;
 use crate::error::*;
 
+use log::*;
 // use template::Template;
 
 mod check;
@@ -51,7 +52,6 @@ impl ActionTrait for Action {
                     .shell()
                     .info(format!("Running {} actions...", elems))?;
                 debug!("Group: {:?}", list);
-
                 for (cur, action) in list.iter().enumerate() {
                     context
                         .shell()
@@ -74,14 +74,7 @@ impl<'a> From<&'a Command> for Action {
 
 // TODO: why is `impl <T: AsRef<Command> From<T>` not working
 impl From<Command> for Action {
-    fn from(command: Command) -> Action {
-        match command {
-            Command::Init => constructors::make_init(&command),
-            Command::Archive { dir } => constructors::make_archive(&dir),
-            Command::Unarchive { dir } => constructors::make_unarchive(&dir),
-            Command::New { dest, template } => constructors::make_new(&dest, &template),
-        }
-    }
+    fn from (_:Command) -> Action  { Action::Noop }
 }
 
 #[derive(Debug)]

@@ -1,6 +1,7 @@
 use super::ActionTrait;
 use crate::app;
 use crate::error::*;
+use log::*;
 use std::fmt;
 
 pub struct Check(Box<dyn Fn(&app::Context) -> Result<()>>);

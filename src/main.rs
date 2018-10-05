@@ -9,7 +9,7 @@ mod logger;
 use archivar::app::Archivar as App;
 use archivar::app::Args;
 use archivar::error::*;
-use archivar::structopt::*;
+use structopt::*;
 
 fn main() {
     let args = Args::from_args();

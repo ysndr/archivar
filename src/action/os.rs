@@ -4,6 +4,7 @@ use crate::error::*;
 use fs_extra::dir;
 use std::fs;
 use std::path::PathBuf;
+use log::*;
 use std::process::Command;
 
 /// OS Specific Actions
