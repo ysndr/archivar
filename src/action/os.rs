@@ -2,9 +2,9 @@ use crate::action::ActionTrait;
 use crate::app;
 use crate::error::*;
 use fs_extra::dir;
+use log::*;
 use std::fs;
 use std::path::PathBuf;
-use log::*;
 use std::process::Command;
 
 /// OS Specific Actions

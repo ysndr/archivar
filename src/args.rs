@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use crate::commands;
+use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, PartialEq, Clone)]
@@ -8,13 +8,13 @@ pub enum Command {
     Init(commands::init::Init),
     // archivar new path ..
     #[structopt(name = "new", about = "Creates new project")]
-    New (commands::new::New),
+    New(commands::new::New),
 
     #[structopt(name = "archive", about = "Archives project")]
-    Archive (commands::archive::Archive),
+    Archive(commands::archive::Archive),
 
     #[structopt(name = "unarchive", about = "Restores project from archive")]
-    Unarchive (commands::unarchive::Unarchive)
+    Unarchive(commands::unarchive::Unarchive),
 }
 
 #[derive(StructOpt, Debug, Clone, PartialEq)]

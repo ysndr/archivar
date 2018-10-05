@@ -2,7 +2,6 @@
 use log::*;
 use structopt;
 
-
 #[cfg(test)] // <-- not needed in examples + integration tests
 extern crate pretty_assertions;
 

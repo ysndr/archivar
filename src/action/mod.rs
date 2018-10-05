@@ -74,7 +74,9 @@ impl<'a> From<&'a Command> for Action {
 
 // TODO: why is `impl <T: AsRef<Command> From<T>` not working
 impl From<Command> for Action {
-    fn from (_:Command) -> Action  { Action::Noop }
+    fn from(_: Command) -> Action {
+        Action::Noop
+    }
 }
 
 #[derive(Debug)]

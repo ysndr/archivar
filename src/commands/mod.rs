@@ -1,5 +1,8 @@
 pub mod archive;
-pub mod unarchive;
-pub mod new;
-pub mod init;
 pub mod command;
+pub mod init;
+pub mod new;
+pub mod unarchive;
+
+pub type Context = crate::app::Context;
+pub type Error = crate::error::Error;

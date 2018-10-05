@@ -1,8 +1,8 @@
+use log::*;
 use shell::{Shell, Verbosity};
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::path::PathBuf;
-use log::*;
 
 use crate::action::*;
 pub use crate::args::{Args, Command};
