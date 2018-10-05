@@ -2,6 +2,7 @@
 name = "archivar"
 version = "0.1.0"
 authors = ["Yannik Sander <me@ysndr.de>"]
+edition = "2018"
 
 [dependencies]
 structopt = "0.2"
