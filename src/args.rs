@@ -5,16 +5,16 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug, PartialEq, Clone)]
 pub enum Command {
     #[structopt(name = "init", about = "Initializes archivar")]
-    Init(commands::init::Init),
+    Init(commands::init::Command),
     // archivar new path ..
     #[structopt(name = "new", about = "Creates new project")]
-    New(commands::new::New),
+    New(commands::new::Command),
 
     #[structopt(name = "archive", about = "Archives project")]
-    Archive(commands::archive::Archive),
+    Archive(commands::archive::Command),
 
     #[structopt(name = "unarchive", about = "Restores project from archive")]
-    Unarchive(commands::unarchive::Unarchive),
+    Unarchive(commands::unarchive::Command),
 }
 
 #[derive(StructOpt, Debug, Clone, PartialEq)]
