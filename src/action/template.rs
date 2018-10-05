@@ -1,13 +1,13 @@
 use super::{Action, ActionTrait, Fail};
-use constants::TEMPLATE_FILE_NAME;
-use error::*;
+use crate::constants::TEMPLATE_FILE_NAME;
+use crate::error::*;
 use serde_yaml;
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 use std::{fs, io};
 
-use app;
+use crate::app;
 
 use super::OS;
 
@@ -85,7 +85,7 @@ fn make_mkpath_actions(paths: &Vec<PathBuf>, cwd: &Path) -> Vec<Action> {
     let mut actions: Vec<Action> = vec![];
 
     for path in paths.iter().filter(|p| p.is_relative()) {
-        let mut path = cwd.join(path);
+        let path = cwd.join(path);
         // path.push(GITKEEP_FILE_NAME);
         actions.push(Action::OS(OS::Mkdir { path }));
     }
@@ -119,7 +119,8 @@ fn make_include_actions(
                     }
                     o_dir
                 })
-            }).unwrap_or_else(|| project_dir.join(Path::new(from.file_name().unwrap())));
+            })
+            .unwrap_or_else(|| project_dir.join(Path::new(from.file_name().unwrap())));
 
         actions.push(Action::OS(OS::Copy { from, to }));
     }

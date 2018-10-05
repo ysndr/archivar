@@ -3,9 +3,9 @@ use std::cell::{RefCell, RefMut};
 use std::env;
 use std::path::PathBuf;
 
-use action::*;
-pub use args::{Args, Command};
-use error::*;
+use crate::action::*;
+pub use crate::args::{Args, Command};
+use crate::error::*;
 
 #[derive(Debug)]
 pub struct Context {
@@ -15,7 +15,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn shell(&self) -> RefMut<Shell> {
+    pub fn shell(&self) -> RefMut<'_, Shell> {
         self.shell.borrow_mut()
     }
 }
@@ -48,7 +48,7 @@ impl Archivar {
         }
     }
 
-    pub fn shell(&self) -> RefMut<Shell> {
+    pub fn shell(&self) -> RefMut<'_, Shell> {
         self.context.shell()
     }
 

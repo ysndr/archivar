@@ -7,7 +7,7 @@ pub enum Command {
     // archivar new path ..
     #[structopt(name = "new", about = "Creates new project")]
     New {
-        #[structopt(parse(from_os_str), help = "Destination path",)]
+        #[structopt(parse(from_os_str), help = "Destination path")]
         dest: PathBuf,
 
         #[structopt(parse(from_os_str), help = "Template path")]
@@ -38,7 +38,7 @@ pub struct Args {
         short = "v",
         long = "verbosity",
         parse(from_occurrences),
-        help = "Switches on verbosity (increase verbosity by applying multiple times)",
+        help = "Switches on verbosity (increase verbosity by applying multiple times)"
     )]
     pub verbosity: usize,
 

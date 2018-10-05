@@ -1,6 +1,6 @@
-use action::ActionTrait;
-use app;
-use error::*;
+use crate::action::ActionTrait;
+use crate::app;
+use crate::error::*;
 use fs_extra::dir;
 use std::fs;
 use std::path::PathBuf;
@@ -55,7 +55,7 @@ impl From<Action> for super::Action {
 /// to run the given command sring in
 impl ActionTrait for Action {
     fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
-        use action::os::Action::*;
+        use crate::action::os::Action::*;
 
         let root = &context.path;
         let mut shell = context.shell();
@@ -150,7 +150,8 @@ impl ActionTrait for Action {
                     .info(match status.code() {
                         Some(code) => format!("command exited with status code: {}", code),
                         None => "command terminated by signal".to_string(),
-                    }).unwrap();
+                    })
+                    .unwrap();
             }
         };
 

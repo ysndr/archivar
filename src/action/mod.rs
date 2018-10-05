@@ -1,7 +1,6 @@
 use super::app;
-use args::Command;
-use error::*;
-
+use crate::args::Command;
+use crate::error::*;
 
 // use template::Template;
 
@@ -109,11 +108,11 @@ impl From<Wildcard> for Action {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use assert_fs::prelude::*;
     use super::*;
-    use constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
-    use logger;
+    use assert_fs::prelude::*;
+    use crate::constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
+    use crate::logger;
+    use std::path::PathBuf;
 
     #[test]
     fn action_set_from_init_command() {
@@ -127,10 +126,12 @@ mod tests {
             OS::Touch {
                 path: archivar_file.clone(),
                 mkparents,
-            }.into(),
+            }
+            .into(),
             OS::Mkdir {
                 path: archive_path.clone(),
-            }.into(),
+            }
+            .into(),
         ]);
 
         assert_eq!(expected, Action::from(&command));
@@ -138,7 +139,7 @@ mod tests {
 
     #[test]
     fn action_set_from_archive_command() {
-        let path: PathBuf = ARCHIVAR_FILE_NAME.into();
+        let _path: PathBuf = ARCHIVAR_FILE_NAME.into();
         let example_project: PathBuf = "examples/project".into();
         let archive_path = PathBuf::from(ARCHIVE_FOLDER_NAME).join(&example_project);
 
@@ -150,14 +151,15 @@ mod tests {
             OS::Move {
                 from: example_project,
                 to: archive_path,
-            }.into(),
+            }
+            .into(),
         ]);
         assert_eq!(expected, Action::from(&command));
     }
 
     #[test]
     fn action_set_from_unarchive_command() {
-        let path: PathBuf = ARCHIVAR_FILE_NAME.into();
+        let _path: PathBuf = ARCHIVAR_FILE_NAME.into();
         let example_project: PathBuf = "examples/project".into();
         let archive_path = PathBuf::from(ARCHIVE_FOLDER_NAME).join(&example_project);
 
@@ -169,7 +171,8 @@ mod tests {
             OS::Move {
                 from: archive_path,
                 to: example_project,
-            }.into(),
+            }
+            .into(),
         ]);
         assert_eq!(expected, Action::from(&command));
     }
@@ -188,7 +191,8 @@ mod tests {
             OS::Touch {
                 path: example_project.join(PROJECT_FILE_NAME),
                 mkparents: true,
-            }.into(),
+            }
+            .into(),
             Message::Info("".to_owned()).into(),
         ]);
         assert_eq!(expected, Action::from(&command));

@@ -1,8 +1,8 @@
 use super::{check, template, Action, Message, OS};
-use args::Command;
-use error::*;
+use crate::args::Command;
+use crate::error::*;
 
-use constants;
+use crate::constants;
 use std::path::PathBuf;
 
 pub fn make_init(_command: &Command) -> Action {
@@ -15,19 +15,22 @@ pub fn make_init(_command: &Command) -> Action {
             not_in_managed_subdir(&context.path)?;
             is_no_archivar_root(&context.path)?;
             Ok(())
-        }).into(),
+        })
+        .into(),
     );
 
     actions.push(
         OS::Touch {
             path: constants::ARCHIVAR_FILE_NAME.into(),
             mkparents: true,
-        }.into(),
+        }
+        .into(),
     );
     actions.push(
         OS::Mkdir {
             path: constants::ARCHIVE_FOLDER_NAME.into(),
-        }.into(),
+        }
+        .into(),
     );
 
     Action::Group(actions)
@@ -60,14 +63,16 @@ pub fn make_archive(dir: &PathBuf) -> Action {
             }
 
             Ok(())
-        }).into(),
+        })
+        .into(),
     );
 
     actions.push(
         OS::Move {
             from: dir.clone(),
             to: PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&dir),
-        }.into(),
+        }
+        .into(),
     );
 
     Action::Group(actions)
@@ -94,14 +99,16 @@ pub fn make_unarchive(dir: &PathBuf) -> Action {
             }
 
             Ok(())
-        }).into(),
+        })
+        .into(),
     );
 
     actions.push(
         OS::Move {
             from: PathBuf::from(constants::ARCHIVE_FOLDER_NAME).join(&dir),
             to: dir.clone(),
-        }.into(),
+        }
+        .into(),
     );
 
     Action::Group(actions)
@@ -133,14 +140,16 @@ pub fn make_new(dest: &PathBuf, template: &Option<PathBuf>) -> Action {
             }
             not_in_project(&context.path, &moved_dest)?;
             Ok(())
-        }).into(),
+        })
+        .into(),
     );
 
     actions.push(
         OS::Touch {
             path: dest.join(constants::PROJECT_FILE_NAME),
             mkparents: true,
-        }.into(),
+        }
+        .into(),
     );
     actions.push(match template {
         None => Message::Info("no template given - skipping template generation".to_owned()).into(),

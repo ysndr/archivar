@@ -1,8 +1,7 @@
-extern crate assert_fs;
-extern crate archivar;
-extern crate log;
-extern crate predicates;
-extern crate pretty_assertions;
+use archivar;
+use assert_fs;
+
+use predicates;
 
 use archivar::app::Archivar as App;
 use archivar::app::{Args, Command};
@@ -16,7 +15,7 @@ mod utils;
 
 use archivar::logger;
 
-use utils::cwd;
+use crate::utils::cwd;
 
 fn setup(template: PathBuf) -> (assert_fs::TempDir, archivar::app::Archivar) {
     logger::setup_logger(logger::level_from_verbosity(3)).unwrap_or(());
