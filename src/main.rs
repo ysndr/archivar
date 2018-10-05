@@ -1,11 +1,6 @@
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
-extern crate chrono;
-extern crate fern;
-extern crate log;
-
-extern crate archivar;
 
 // mod template;
 
@@ -27,7 +22,7 @@ fn main() {
     let app = App::new(args.sub, context);
 
     if let Err(e) = run(&app) {
-        let mut mapp = app;
+        let mapp = app;
         mapp.context.shell().error(e).is_ok();
     }
 }

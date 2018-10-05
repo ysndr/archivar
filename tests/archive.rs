@@ -1,16 +1,16 @@
-extern crate assert_fs;
-extern crate archivar;
-extern crate log;
-extern crate predicates;
-extern crate pretty_assertions;
-extern crate shell;
+use archivar;
+use assert_fs;
 
+use predicates;
+
+use shell;
+
+use archivar::app::Archivar as App;
+use archivar::app::Command;
+use archivar::app::Context;
+use archivar::constants::ARCHIVE_FOLDER_NAME;
 use assert_fs::assert::IntoPathPredicate;
 use assert_fs::TempDir;
-use archivar::app::Archivar as App;
-use archivar::app::Context;
-use archivar::app::Command;
-use archivar::constants::ARCHIVE_FOLDER_NAME;
 use std::cell::RefCell;
 
 use assert_fs::prelude::*;

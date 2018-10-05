@@ -150,7 +150,8 @@ impl ActionTrait for Action {
                     .info(match status.code() {
                         Some(code) => format!("command exited with status code: {}", code),
                         None => "command terminated by signal".to_string(),
-                    }).unwrap();
+                    })
+                    .unwrap();
             }
         };
 

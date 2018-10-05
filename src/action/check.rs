@@ -3,14 +3,14 @@ use crate::app;
 use crate::error::*;
 use std::fmt;
 
-pub struct Check(Box<Fn(&app::Context) -> Result<()>>);
+pub struct Check(Box<dyn Fn(&app::Context) -> Result<()>>);
 impl fmt::Debug for Check {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{runtime check}}")
     }
 }
 impl fmt::Display for Check {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{runtime check}}")
     }
 }
@@ -35,13 +35,13 @@ impl ActionTrait for Check {
 }
 
 impl Check {
-    pub fn new(fun: Box<Fn(&app::Context) -> Result<()>>) -> Check {
+    pub fn new(fun: Box<dyn Fn(&app::Context) -> Result<()>>) -> Check {
         Check(fun)
     }
 }
 
-impl From<Box<Fn(&app::Context) -> Result<()>>> for super::Action {
-    fn from(fun: Box<Fn(&app::Context) -> Result<()>>) -> super::Action {
+impl From<Box<dyn Fn(&app::Context) -> Result<()>>> for super::Action {
+    fn from(fun: Box<dyn Fn(&app::Context) -> Result<()>>) -> super::Action {
         Check::new(fun).into()
     }
 }

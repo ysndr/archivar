@@ -1,8 +1,7 @@
-extern crate assert_fs;
-extern crate archivar;
-extern crate log;
-extern crate predicates;
-extern crate pretty_assertions;
+use archivar;
+use assert_fs;
+
+use predicates;
 
 use archivar::app::Archivar as App;
 use archivar::app::{Args, Command};

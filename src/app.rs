@@ -15,7 +15,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn shell(&self) -> RefMut<Shell> {
+    pub fn shell(&self) -> RefMut<'_, Shell> {
         self.shell.borrow_mut()
     }
 }
@@ -48,7 +48,7 @@ impl Archivar {
         }
     }
 
-    pub fn shell(&self) -> RefMut<Shell> {
+    pub fn shell(&self) -> RefMut<'_, Shell> {
         self.context.shell()
     }
 

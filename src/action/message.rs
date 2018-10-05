@@ -15,7 +15,8 @@ impl ActionTrait for Action {
             Action::Error(message) => context.shell().error(message),
             Action::Warn(message) => context.shell().warn(message),
             Action::Info(message) => context.shell().info(message),
-        }.map_err(|e| e.into())
+        }
+        .map_err(|e| e.into())
     }
 }
 

@@ -2,7 +2,6 @@ use super::app;
 use crate::args::Command;
 use crate::error::*;
 
-
 // use template::Template;
 
 mod check;
@@ -109,11 +108,11 @@ impl From<Wildcard> for Action {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-    use assert_fs::prelude::*;
     use super::*;
+    use assert_fs::prelude::*;
     use crate::constants::{ARCHIVAR_FILE_NAME, ARCHIVE_FOLDER_NAME, PROJECT_FILE_NAME};
     use crate::logger;
+    use std::path::PathBuf;
 
     #[test]
     fn action_set_from_init_command() {
@@ -127,10 +126,12 @@ mod tests {
             OS::Touch {
                 path: archivar_file.clone(),
                 mkparents,
-            }.into(),
+            }
+            .into(),
             OS::Mkdir {
                 path: archive_path.clone(),
-            }.into(),
+            }
+            .into(),
         ]);
 
         assert_eq!(expected, Action::from(&command));
@@ -150,7 +151,8 @@ mod tests {
             OS::Move {
                 from: example_project,
                 to: archive_path,
-            }.into(),
+            }
+            .into(),
         ]);
         assert_eq!(expected, Action::from(&command));
     }
@@ -169,7 +171,8 @@ mod tests {
             OS::Move {
                 from: archive_path,
                 to: example_project,
-            }.into(),
+            }
+            .into(),
         ]);
         assert_eq!(expected, Action::from(&command));
     }
@@ -188,7 +191,8 @@ mod tests {
             OS::Touch {
                 path: example_project.join(PROJECT_FILE_NAME),
                 mkparents: true,
-            }.into(),
+            }
+            .into(),
             Message::Info("".to_owned()).into(),
         ]);
         assert_eq!(expected, Action::from(&command));
