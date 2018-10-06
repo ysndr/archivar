@@ -1,4 +1,5 @@
 use crate::commands::{command, Context, Error};
+use crate::constants;
 
 use structopt::StructOpt;
 
@@ -28,3 +29,33 @@ impl command::Execute<Context, ()> for Command {
 }
 
 impl command::Command<Context, (), Error> for Command {}
+
+
+#[cfg(test)]
+mod tests {
+    use super::{Command, Context};
+    use crate::commands::command::*;
+    use assert_fs;
+
+
+
+    fn context()  -> Context { Context::default() }
+    
+
+    #[test]
+    fn state() {
+        let command = Command {};
+
+        assert_eq!((), command.state(&context()));
+    }
+
+    #[test]
+    fn check() {
+        let command = Command {};
+        
+        let temp = assert_fs::TempDir::new().unwrap();
+        let context = Context { path: temp.path().into(), ..context() };
+
+        assert!(command.check(&context, &()).is_ok());
+    }
+}
