@@ -43,11 +43,6 @@ pub enum Action {
     },
 }
 
-impl From<Action> for super::Action {
-    fn from(action: Action) -> super::Action {
-        super::Action::OS(action)
-    }
-}
 
 /// ActionTraitt implementation
 ///
