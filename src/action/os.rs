@@ -1,156 +1,110 @@
-use crate::action::ActionTrait;
-use crate::app;
 use crate::error::*;
 use fs_extra::dir;
 use log::*;
+use shell;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
 /// OS Specific Actions
 ///
-/// Basically, the enum variants hold information about target paths used to
-/// perform filesystem related tasks in the ActionTrait implementation
-#[derive(Debug, PartialEq)]
-pub enum Action {
-    Mkdir {
-        path: PathBuf,
-    },
-
-    Touch {
-        path: PathBuf,
-        mkparents: bool,
-    },
-
-    Move {
-        from: PathBuf,
-        to: PathBuf,
-    },
-
-    Copy {
-        from: PathBuf,
-        to: PathBuf,
-    },
-
-    Chmod {
-        target: PathBuf,
-        ro: bool,
-    },
-
-    Shell {
-        command: String,
-        cwd: Option<PathBuf>,
-    },
+/// Struct holds root path and shell for simplified internal use
+pub struct Action<'a> {
+    root: PathBuf,
+    shell: &'a mut shell::Shell,
 }
+pub type Continue<'a> = Result<&'a Action<'a>>;
 
+impl<'a> Action<'a> {
+    pub fn new(root: PathBuf, shell: &'a mut shell::Shell) -> Action {
+        Action { root, shell }
+    }
 
-/// ActionTraitt implementation
-///
-/// Mostly proxy the `std` provided methods.
-/// For shell commands we reach out for a bash shell
-/// to run the given command sring in
-impl ActionTrait for Action {
-    fn run<'a>(&self, context: &'a app::Context) -> Result<()> {
-        use crate::action::os::Action::*;
-
-        let root = &context.path;
-        let mut shell = context.shell();
-
-        match self {
-            // create folders
-            Mkdir { path } => {
-                info!("mkdir ({})", path.display());
-                fs::create_dir_all(root.join(path))?;
-            }
-
-            // create files
-            Touch { path, mkparents } => {
-                info!("touch ({})", path.display());
-                if *mkparents {
-                    fs::create_dir_all(root.join(path).parent().unwrap())?;
-                }
-                fs::File::create(root.join(path))?;
-            }
-
-            // move files/folders
-            Move { from, to } => {
-                info!("move ({} -> {})", from.display(), to.display());
-                let from = root.join(from);
-                let to = root.join(to);
-
-                fs::create_dir_all(to.parent().unwrap())?;
-                if from.is_dir() {
-                    dir::move_dir(
-                        from,
-                        to,
-                        &dir::CopyOptions {
-                            copy_inside: true,
-                            ..dir::CopyOptions::new()
-                        },
-                    )?;
-                } else {
-                    fs::rename(from, to)?;
-                }
-            }
-
-            // copy files/folders
-            Copy { from, to } => {
-                info!("copy ({} -> {})", from.display(), to.display());
-                fs::create_dir_all(root.join(to).parent().unwrap())?;
-                if from.is_dir() {
-                    dir::copy(
-                        from,
-                        root.join(to),
-                        &dir::CopyOptions {
-                            copy_inside: true,
-                            ..dir::CopyOptions::new()
-                        },
-                    )?;
-                } else {
-                    fs::copy(from, root.join(to))?;
-                }
-            }
-
-            // chmod files/folders
-            Chmod { target, ro } => {
-                info!(
-                    "chmod ({} := {})",
-                    target.display(),
-                    if *ro { "ro" } else { "rw" }
-                );
-
-                let mut perms = fs::metadata(root.join(target))?.permissions();
-                perms.set_readonly(*ro);
-                fs::set_permissions(root.join(target), perms)?;
-            }
-
-            // run shell commands
-            Shell { command, cwd } => {
-                let mut base = Command::new("sh");
-
-                let process = base.arg("-c").arg(command);
-
-                let process = if let Some(cwd) = cwd {
-                    let cwd = root.join(cwd);
-                    error!("{}", cwd.display());
-                    process.current_dir(cwd)
-                } else {
-                    process
-                };
-
-                shell.info(format!("command: `{}`", command)).unwrap();
-
-                let status = process.status()?;
-
-                shell
-                    .info(match status.code() {
-                        Some(code) => format!("command exited with status code: {}", code),
-                        None => "command terminated by signal".to_string(),
-                    })
-                    .unwrap();
-            }
+    pub fn mkdir(&self, path: PathBuf) -> Continue {
+        info!("mkdir ({})", path.display());
+        fs::create_dir_all(self.root.join(path))?;
+        Ok(self)
+    }
+    pub fn touch(&self, path: PathBuf) -> Continue {
+        info!("touch ({})", path.display());
+        fs::create_dir_all(self.root.join(&path).parent().unwrap())?;
+        fs::File::create(self.root.join(&path))?;
+        Ok(self)
+    }
+    pub fn mv(&self, from: PathBuf, to: PathBuf) -> Continue {
+        info!("move ({} -> {})", from.display(), to.display());
+        let from = self.root.join(from);
+        let to = self.root.join(to);
+        let options = dir::CopyOptions {
+            copy_inside: true,
+            ..dir::CopyOptions::new()
         };
 
-        Ok(())
+        fs::create_dir_all(to.parent().unwrap())?;
+        if from.is_dir() {
+            dir::move_dir(from, to, &options)?;
+        } else {
+            fs::rename(from, to)?;
+        }
+        Ok(self)
+    }
+    pub fn cp(&self, from: PathBuf, to: PathBuf) -> Continue {
+        info!("copy ({} -> {})", from.display(), to.display());
+        let from = self.root.join(from);
+        let to = self.root.join(to);
+        let options = dir::CopyOptions {
+            copy_inside: true,
+            ..dir::CopyOptions::new()
+        };
+
+        fs::create_dir_all(self.root.join(&to).parent().unwrap())?;
+        if from.is_dir() {
+            dir::copy(from, to, &options)?;
+        } else {
+            fs::copy(from, self.root.join(to))?;
+        }
+        Ok(self)
+    }
+    pub fn include(&self, from: PathBuf, to: PathBuf) -> Continue {
+        info!("include file ({} -> {})", from.display(), to.display());
+        let to = self.root.join(to);
+        let options = dir::CopyOptions {
+            copy_inside: true,
+            ..dir::CopyOptions::new()
+        };
+
+        fs::create_dir_all(self.root.join(&to).parent().unwrap())?;
+        if from.is_dir() {
+            dir::copy(from, to, &options)?;
+        } else {
+            fs::copy(from, self.root.join(to))?;
+        }
+        Ok(self)
+    }
+    pub fn shell(&self, command: String, cwd: Option<PathBuf>) -> Continue {
+        let mut base = Command::new("sh");
+
+        let process = base.arg("-c").arg(command);
+
+        let process = if let Some(cwd) = cwd {
+            let cwd = self.root.join(cwd);
+            self.shell
+                .info(format!("setting shell cwd to {}", cwd.display()));
+            process.current_dir(cwd)
+        } else {
+            process
+        };
+
+        self.shell.info(format!("command: `{}`", command)).unwrap();
+
+        let status = process.status()?;
+
+        self.shell
+            .info(match status.code() {
+                Some(code) => format!("command exited with status code: {}", code),
+                None => "command terminated by signal".into(),
+            })
+            .unwrap();
+        Ok(self)
     }
 }
