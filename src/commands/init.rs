@@ -25,7 +25,7 @@ impl command::Check<Context, ()> for Command {
 impl command::Execute<Context, ()> for Command {
     type Error = Error;
     fn execute(&self, context: &Context, state: &()) -> Result<()> {
-        unimplemented!()
+        
     }
 }
 
@@ -38,7 +38,7 @@ mod tests {
     use super::{Command, Context, constants};
     use crate::commands::command::*;
     use assert_fs::prelude::*;
-
+    use predicates::prelude::*;
 
 
     fn context()  -> Context { Context::default() }
@@ -97,6 +97,17 @@ mod tests {
         let result = command.check(&context, &());
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn execute() {
+        let command = Command {};
+        
+        let temp = assert_fs::TempDir::new().unwrap();
+        let context = Context { path: temp.path().into(), ..context() };
+
+        assert!(command.execute(&context, &()).is_ok());
+        assert!(temp.child(constants::ARCHIVAR_FILE_NAME).path().exists());
     }
 
 
