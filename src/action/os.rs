@@ -81,30 +81,27 @@ impl<'a> Action<'a> {
         }
         Ok(self)
     }
-    pub fn shell(&self, command: String, cwd: Option<PathBuf>) -> Continue {
-        let mut base = Command::new("sh");
+    pub fn shell(&mut self, command: String, cwd: Option<PathBuf>) -> Continue {
+        self.shell.info(format!("command: `{}`", command)).unwrap();
 
+        let mut base = Command::new("sh");
         let process = base.arg("-c").arg(command);
 
         let process = if let Some(cwd) = cwd {
             let cwd = self.root.join(cwd);
             self.shell
-                .info(format!("setting shell cwd to {}", cwd.display()));
+                .info(format!("setting shell cwd to {}", cwd.display()))?;
             process.current_dir(cwd)
         } else {
             process
         };
 
-        self.shell.info(format!("command: `{}`", command)).unwrap();
-
         let status = process.status()?;
 
-        self.shell
-            .info(match status.code() {
-                Some(code) => format!("command exited with status code: {}", code),
-                None => "command terminated by signal".into(),
-            })
-            .unwrap();
+        self.shell.info(match status.code() {
+            Some(code) => format!("command exited with status code: {}", code),
+            None => "command terminated by signal".into(),
+        })?;
         Ok(self)
     }
 }
